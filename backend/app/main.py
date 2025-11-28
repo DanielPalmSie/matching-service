@@ -2,10 +2,8 @@ from fastapi import FastAPI
 
 from .api.requests import router as requests_router
 from .api.users import router as users_router
-from .db import Base, engine
 
-# временно, пока нет Alembic
-Base.metadata.create_all(bind=engine)
+# Database schema is managed via Alembic migrations.
 
 app = FastAPI(title="Matching Service MVP")
 
