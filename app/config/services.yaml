@@ -24,8 +24,8 @@ services:
     App\Service\Embedding\EmbeddingClientInterface:
         class: App\Service\Embedding\OpenAIEmbeddingClient
         arguments:
-            $apiKey: '%app.openai.api_key%'
-            $model: '%app.openai.embedding_model%'
+            $openAiApiKey: '%env(OPENAI_API_KEY)%'
+            $openAiEmbeddingModel: '%env(OPENAI_EMBEDDING_MODEL)%'
 
     App\Service\Matching\MatchingEngineInterface:
         class: App\Service\Matching\EmbeddingMatchingEngine
