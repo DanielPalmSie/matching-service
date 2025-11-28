@@ -1,0 +1,142 @@
+{
+  "info": {
+    "name": "Matching API (Symfony MVP)",
+    "_postman_id": "f4d8c5c2-1234-4567-89ab-ffffffffffff",
+    "description": "Коллекция для проверки основных роутов Symfony бэкенда: /api/users и /api/requests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create or Update User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"externalId\": \"test-user-1\",\n  \"displayName\": \"Test User\",\n  \"city\": \"Munich\",\n  \"country\": \"DE\",\n  \"timezone\": \"Europe/Berlin\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/users",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get User by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/users/{{user_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "{{user_id}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Request",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ownerId\": {{user_id}},\n  \"rawText\": \"I just arrived in Tokyo and want to go to the theatre tonight\",\n  \"type\": \"meet\",\n  \"city\": \"Tokyo\",\n  \"country\": \"JP\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/requests",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "requests"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Request by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/requests/{{request_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "requests",
+            "{{request_id}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Matches for Request",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/requests/{{request_id}}/matches?limit=20",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "requests",
+            "{{request_id}}",
+            "matches"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "20"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "user_id",
+      "value": "1"
+    },
+    {
+      "key": "request_id",
+      "value": "1"
+    }
+  ]
+}
