@@ -1,0 +1,25 @@
+# IDE
+.idea/
+.vscode/
+
+# Symfony inside app/
+app/vendor/
+app/var/
+app/.env.local
+app/.env.local.php
+app/public/bundles/
+
+# Symfony cache/logs (если появятся)
+app/var/cache/
+app/var/log/
+
+# Composer lock если хочешь (по желанию)
+# app/composer.lock
+
+# Node (если потом появится фронтенд)
+node_modules/
+dist/
+
+# OS shit
+.DS_Store
+Thumbs.db
