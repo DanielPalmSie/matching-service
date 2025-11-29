@@ -1,0 +1,9 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: Matching API
+            description: API documentation for your MVP backend
+            version: 1.0.0
+    areas:
+        path_patterns:
+            - ^/api
