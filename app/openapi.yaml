@@ -1,0 +1,304 @@
+openapi: 3.0.0
+info:
+  title: Matching Service API
+  version: '1.0.0'
+  description: OpenAPI documentation for matching service endpoints.
+paths:
+  /api/requests:
+    post:
+      tags: [Requests]
+      summary: Create a request
+      description: Creates a new request with embedding for later matching operations.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestPayload'
+      responses:
+        '200':
+          description: Request created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Request'
+        '400':
+          description: Validation failed (e.g. missing ownerId/rawText/type).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Owner could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Unexpected error while creating the request.
+  /api/requests/{id}:
+    get:
+      tags: [Requests]
+      summary: Get request details
+      description: Retrieves a single request by its identifier.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Request identifier
+      responses:
+        '200':
+          description: Request found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Request'
+        '404':
+          description: Request not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Unexpected error while fetching the request.
+  /api/requests/{id}/matches:
+    get:
+      tags: [Requests]
+      summary: Get matching requests
+      description: Returns similar requests for the given request using the matching engine.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Request identifier
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Maximum number of matches to return (1-100).
+      responses:
+        '200':
+          description: Matching requests returned.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RequestSummary'
+        '404':
+          description: Request not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Unexpected error while fetching matches.
+  /api/users:
+    post:
+      tags: [Users]
+      summary: Create or update a user
+      description: Creates a user by external identifier or updates details when it already exists.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPayload'
+      responses:
+        '200':
+          description: User created or updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Validation failed (e.g. missing externalId).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Unexpected error while saving the user.
+  /api/users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user data
+      description: Retrieves a user by identifier with core profile fields.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User identifier
+      responses:
+        '200':
+          description: User found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Unexpected error while fetching the user.
+components:
+  schemas:
+    RequestPayload:
+      type: object
+      required: [ownerId, rawText, type]
+      properties:
+        ownerId:
+          type: integer
+          example: 10
+          description: Existing user identifier who owns the request.
+        rawText:
+          type: string
+          example: Looking for a software engineer role in Berlin
+          description: Full free-text content of the request.
+        type:
+          type: string
+          example: job
+          description: Short type name of the request.
+        city:
+          type: string
+          nullable: true
+          example: Berlin
+          description: Optional city for geo filtering.
+        country:
+          type: string
+          nullable: true
+          example: DE
+          description: Optional ISO country code.
+    Request:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+        ownerId:
+          type: integer
+          example: 10
+        type:
+          type: string
+          example: job
+        city:
+          type: string
+          nullable: true
+          example: Berlin
+        country:
+          type: string
+          nullable: true
+          example: DE
+        status:
+          type: string
+          example: active
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-05-01T12:00:00+00:00'
+        rawText:
+          type: string
+          example: Looking for a software engineer role in Berlin
+    RequestSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 84
+        ownerId:
+          type: integer
+          example: 15
+        type:
+          type: string
+          example: job
+        city:
+          type: string
+          nullable: true
+          example: Berlin
+        country:
+          type: string
+          nullable: true
+          example: DE
+        status:
+          type: string
+          example: active
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-05-01T12:00:00+00:00'
+    UserPayload:
+      type: object
+      required: [externalId]
+      properties:
+        externalId:
+          type: string
+          example: ext-12345
+          description: External unique identifier for the user.
+        displayName:
+          type: string
+          nullable: true
+          example: Ada Lovelace
+          description: Optional display name.
+        city:
+          type: string
+          nullable: true
+          example: London
+          description: Optional city.
+        country:
+          type: string
+          nullable: true
+          example: GB
+          description: Optional ISO country code.
+        timezone:
+          type: string
+          nullable: true
+          example: Europe/London
+          description: Optional timezone identifier.
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 7
+        externalId:
+          type: string
+          example: ext-12345
+        displayName:
+          type: string
+          nullable: true
+          example: Ada Lovelace
+        city:
+          type: string
+          nullable: true
+          example: London
+        country:
+          type: string
+          nullable: true
+          example: GB
+        timezone:
+          type: string
+          nullable: true
+          example: Europe/London
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-05-01T12:00:00+00:00'
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Message detailing what went wrong.
