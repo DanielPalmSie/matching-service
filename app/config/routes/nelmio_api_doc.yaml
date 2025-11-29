@@ -1,4 +1,11 @@
 nelmio_api_doc:
     path: /api/docs
-    controller: nelmio_api_doc.controller.swagger_ui
     methods: [GET]
+    defaults:
+        _controller: 'Nelmio\\ApiDocBundle\\Controller\\SwaggerUiController::indexAction'
+
+nelmio_api_doc_json:
+    path: /api/docs.json
+    methods: [GET]
+    defaults:
+        _controller: 'Nelmio\\ApiDocBundle\\Controller\\SwaggerUiController::swaggerAction'
