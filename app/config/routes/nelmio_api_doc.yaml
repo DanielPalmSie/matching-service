@@ -1,5 +1,4 @@
 nelmio_api_doc:
     path: /api/docs
-    controller: Nelmio\ApiDocBundle\Controller\SwaggerUiController
-    defaults:
-        area: default
+    controller: nelmio_api_doc.controller.swagger_ui
+    methods: [GET]
