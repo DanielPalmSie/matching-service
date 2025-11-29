@@ -57,7 +57,8 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
-        ]
+        ],
+        "analyse": "phpstan analyse"
     },
     "conflict": {
         "symfony/symfony": "*"
@@ -69,6 +70,9 @@
         }
     },
     "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.91",
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-doctrine": "^2.0",
         "symfony/maker-bundle": "^1.65"
     }
 }

@@ -16,13 +16,13 @@ class Request
 
     #[ORM\ManyToOne(inversedBy: 'requests')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?User $owner = null;
+    private User $owner;
 
     #[ORM\Column(type: Types::TEXT, nullable: false)]
-    private ?string $rawText = null;
+    private string $rawText;
 
     #[ORM\Column(length: 50)]
-    private ?string $type = null;
+    private string $type;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $city = null;
@@ -31,13 +31,17 @@ class Request
     private ?string $country = null;
 
     #[ORM\Column(length: 20)]
-    private ?string $status = null;
+    private string $status;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt = null;
+    private \DateTimeImmutable $createdAt;
 
+    /**
+     * @var array<int, float>|null
+     */
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $embedding = null;
+
 
     public function __construct()
     {
@@ -49,7 +53,7 @@ class Request
         return $this->id;
     }
 
-    public function getOwner(): ?User
+    public function getOwner(): User
     {
         return $this->owner;
     }
@@ -61,7 +65,7 @@ class Request
         return $this;
     }
 
-    public function getRawText(): ?string
+    public function getRawText(): string
     {
         return $this->rawText;
     }
@@ -73,7 +77,7 @@ class Request
         return $this;
     }
 
-    public function getType(): ?string
+    public function getType(): string
     {
         return $this->type;
     }
@@ -109,7 +113,7 @@ class Request
         return $this;
     }
 
-    public function getStatus(): ?string
+    public function getStatus(): string
     {
         return $this->status;
     }
@@ -121,7 +125,7 @@ class Request
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
     }
@@ -133,11 +137,17 @@ class Request
         return $this;
     }
 
+    /**
+     * @return array<int, float>|null
+     */
     public function getEmbedding(): ?array
     {
         return $this->embedding;
     }
 
+    /**
+     * @param array<int, float>|null $embedding
+     */
     public function setEmbedding(?array $embedding): static
     {
         $this->embedding = $embedding;

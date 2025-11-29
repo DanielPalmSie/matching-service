@@ -18,7 +18,7 @@ class User
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $externalId = null;
+    private string $externalId;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $displayName = null;
@@ -33,7 +33,7 @@ class User
     private ?string $timezone = null;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt = null;
+    private \DateTimeImmutable $createdAt;
 
     /**
      * @var Collection<int, Request>

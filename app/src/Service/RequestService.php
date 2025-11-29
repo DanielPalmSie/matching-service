@@ -40,6 +40,7 @@ class RequestService
             throw new NotFoundException('Owner not found.');
         }
 
+        /** @var array<int, float> $embedding */
         $embedding = $this->embeddingClient->embed($payload['rawText']);
 
         $requestEntity = new RequestEntity();
