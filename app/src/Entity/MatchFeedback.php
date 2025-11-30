@@ -11,6 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'match_feedback')]
 #[ORM\Index(name: 'idx_match_feedback_created_at', columns: ['created_at'])]
 #[ORM\Index(name: 'idx_match_feedback_reason_code', columns: ['reason_code'])]
+#[ORM\Index(name: 'idx_match_feedback_main_issue', columns: ['main_issue'])]
 class MatchFeedback
 {
     #[ORM\Id]
@@ -21,6 +22,12 @@ class MatchFeedback
     #[ORM\Column(name: 'user_id')]
     private int $userId;
 
+    #[ORM\Column(name: 'match_id', nullable: true)]
+    private ?int $matchId = null;
+
+    #[ORM\Column(name: 'target_request_id', nullable: true)]
+    private ?int $targetRequestId = null;
+
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $comment = null;
 
@@ -30,6 +37,9 @@ class MatchFeedback
     #[ORM\Column(name: 'relevance_score', type: 'smallint')]
     private int $relevanceScore;
 
+    #[ORM\Column(name: 'main_issue', length: 50, nullable: true)]
+    private ?string $mainIssue = null;
+
     #[ORM\Column(name: 'created_at')]
     private \DateTimeImmutable $createdAt;
 
@@ -38,13 +48,19 @@ class MatchFeedback
         ?string $comment,
         ?string $reasonCode,
         int $relevanceScore,
-        ?\DateTimeImmutable $createdAt = null
+        ?\DateTimeImmutable $createdAt = null,
+        ?int $matchId = null,
+        ?int $targetRequestId = null,
+        ?string $mainIssue = null
     ) {
         $this->userId = $userId;
         $this->comment = $comment;
         $this->reasonCode = $reasonCode;
         $this->relevanceScore = $relevanceScore;
         $this->createdAt = $createdAt ?? new \DateTimeImmutable();
+        $this->matchId = $matchId;
+        $this->targetRequestId = $targetRequestId;
+        $this->mainIssue = $mainIssue;
     }
 
     public function getId(): ?int
@@ -60,6 +76,26 @@ class MatchFeedback
     public function setUserId(int $userId): void
     {
         $this->userId = $userId;
+    }
+
+    public function getMatchId(): ?int
+    {
+        return $this->matchId;
+    }
+
+    public function setMatchId(?int $matchId): void
+    {
+        $this->matchId = $matchId;
+    }
+
+    public function getTargetRequestId(): ?int
+    {
+        return $this->targetRequestId;
+    }
+
+    public function setTargetRequestId(?int $targetRequestId): void
+    {
+        $this->targetRequestId = $targetRequestId;
     }
 
     public function getComment(): ?string
@@ -90,6 +126,16 @@ class MatchFeedback
     public function setRelevanceScore(int $relevanceScore): void
     {
         $this->relevanceScore = $relevanceScore;
+    }
+
+    public function getMainIssue(): ?string
+    {
+        return $this->mainIssue;
+    }
+
+    public function setMainIssue(?string $mainIssue): void
+    {
+        $this->mainIssue = $mainIssue;
     }
 
     public function getCreatedAt(): \DateTimeImmutable
