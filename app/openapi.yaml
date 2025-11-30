@@ -8,7 +8,7 @@ paths:
     post:
       tags: [Feedback]
       summary: Submit match feedback
-      description: Stores user feedback for a specific match.
+      description: Stores user feedback for a specific match or recommendation shown to the user.
       requestBody:
         required: true
         content:
@@ -28,6 +28,12 @@ paths:
                     example: ok
         '400':
           description: Invalid payload supplied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required or token invalid.
           content:
             application/json:
               schema:
@@ -56,6 +62,12 @@ paths:
                     example: ok
         '400':
           description: Invalid payload supplied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required or token invalid.
           content:
             application/json:
               schema:
@@ -401,7 +413,7 @@ components:
           example: Message detailing what went wrong.
     MatchFeedbackRequest:
       type: object
-      required: [userId, relevanceScore]
+      required: [userId]
       properties:
         userId:
           type: integer
@@ -420,37 +432,49 @@ components:
           description: Relevance score provided by the user.
           example: 1
         reasonCode:
-          $ref: '#/components/schemas/ReasonCode'
+          $ref: '#/components/schemas/ReasonCodeEnum'
         comment:
           type: string
           nullable: true
           example: optional
         mainIssue:
-          $ref: '#/components/schemas/MainIssue'
+          $ref: '#/components/schemas/MainIssueEnum'
     AppFeedbackRequest:
       type: object
-      required: [userId, rating]
+      required: [userId]
       properties:
         userId:
           type: integer
           example: 123
         rating:
-          $ref: '#/components/schemas/Rating'
+          $ref: '#/components/schemas/RatingInteger'
         mainIssue:
-          $ref: '#/components/schemas/MainIssue'
+          $ref: '#/components/schemas/MainIssueEnum'
         comment:
           type: string
           nullable: true
           example: optional
-    ReasonCode:
+    ReasonCodeEnum:
       type: string
-      enum: [not_relevant, too_far, old_request, spam, language_mismatch]
+      enum:
+        - not_relevant
+        - too_far
+        - language_mismatch
+        - old_request
+        - spam
+        - not_interested
+        - other
       example: not_relevant
-    MainIssue:
+    MainIssueEnum:
       type: string
-      enum: [irrelevant_matches, few_users, missing_features, bugs, performance, hard_to_use, other]
+      enum:
+        - few_users
+        - bad_matches
+        - need_filters
+        - ux_confusing
+        - other
       example: few_users
-    Rating:
+    RatingInteger:
       type: integer
       minimum: 1
       maximum: 5

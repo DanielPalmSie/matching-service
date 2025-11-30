@@ -249,25 +249,118 @@
 			},
 			"response": []
 		},
-		{
-			"name": "Get Current User",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{base_url}}/api/me",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"api",
-						"me"
-					]
-				}
-			},
-			"response": []
-		}
-	],
+                {
+                        "name": "Get Current User",
+                        "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                        "raw": "{{base_url}}/api/me",
+                                        "host": [
+                                                "{{base_url}}"
+                                        ],
+                                        "path": [
+                                                "api",
+                                                "me"
+                                        ]
+                                }
+                        },
+                        "response": []
+                },
+                {
+                        "name": "Feedback",
+                        "item": [
+                                {
+                                        "name": "Match",
+                                        "item": [
+                                                {
+                                                        "name": "Submit Match Feedback",
+                                                        "request": {
+                                                                "auth": {
+                                                                        "type": "bearer",
+                                                                        "bearer": [
+                                                                                {
+                                                                                        "key": "token",
+                                                                                        "value": "{{access_token}}",
+                                                                                        "type": "string"
+                                                                                }
+                                                                        ]
+                                                                },
+                                                                "method": "POST",
+                                                                "header": [
+                                                                        {
+                                                                                "key": "Content-Type",
+                                                                                "value": "application/json"
+                                                                        }
+                                                                ],
+                                                                "body": {
+                                                                        "mode": "raw",
+                                                                        "raw": "{\n  \"userId\": 1,\n  \"matchId\": 123,\n  \"targetRequestId\": 456,\n  \"relevanceScore\": 1,\n  \"reasonCode\": \"not_relevant\",\n  \"comment\": null,\n  \"mainIssue\": null\n}"
+                                                                },
+                                                                "url": {
+                                                                        "raw": "{{base_url}}/api/feedback/match",
+                                                                        "host": [
+                                                                                "{{base_url}}"
+                                                                        ],
+                                                                        "path": [
+                                                                                "api",
+                                                                                "feedback",
+                                                                                "match"
+                                                                        ]
+                                                                },
+                                                                "description": "Submit feedback for a specific match or recommendation, including relevance score and optional context."
+                                                        },
+                                                        "response": []
+                                                }
+                                        ]
+                                },
+                                {
+                                        "name": "App",
+                                        "item": [
+                                                {
+                                                        "name": "Submit App Feedback",
+                                                        "request": {
+                                                                "auth": {
+                                                                        "type": "bearer",
+                                                                        "bearer": [
+                                                                                {
+                                                                                        "key": "token",
+                                                                                        "value": "{{access_token}}",
+                                                                                        "type": "string"
+                                                                                }
+                                                                        ]
+                                                                },
+                                                                "method": "POST",
+                                                                "header": [
+                                                                        {
+                                                                                "key": "Content-Type",
+                                                                                "value": "application/json"
+                                                                        }
+                                                                ],
+                                                                "body": {
+                                                                        "mode": "raw",
+                                                                        "raw": "{\n  \"userId\": 1,\n  \"rating\": 5,\n  \"mainIssue\": \"few_users\",\n  \"comment\": \"Great app but I want more people in my city\"\n}"
+                                                                },
+                                                                "url": {
+                                                                        "raw": "{{base_url}}/api/feedback/app",
+                                                                        "host": [
+                                                                                "{{base_url}}"
+                                                                        ],
+                                                                        "path": [
+                                                                                "api",
+                                                                                "feedback",
+                                                                                "app"
+                                                                        ]
+                                                                },
+                                                                "description": "Send overall app feedback with rating, optional main issue, and comments."
+                                                        },
+                                                        "response": []
+                                                }
+                                        ]
+                                }
+                        ]
+                }
+        ],
 	"auth": {
 		"type": "bearer",
 		"bearer": [
