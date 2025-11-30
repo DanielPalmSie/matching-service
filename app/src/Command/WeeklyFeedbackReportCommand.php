@@ -83,13 +83,20 @@ class WeeklyFeedbackReportCommand extends Command
      */
     private function fetchRecentComments(DateTimeImmutable $from, DateTimeImmutable $to): array
     {
-        $sql = 'SELECT comment FROM match_feedback WHERE created_at >= :from AND created_at < :to AND comment IS NOT NULL AND comment <> '''' ORDER BY created_at ASC';
+        $sql = "SELECT comment
+            FROM match_feedback
+            WHERE created_at >= :from
+              AND created_at < :to
+              AND comment IS NOT NULL
+              AND comment <> ''
+            ORDER BY created_at ASC";
+
         $comments = $this->connection->fetchFirstColumn($sql, [
             'from' => $from->format('Y-m-d H:i:s'),
-            'to' => $to->format('Y-m-d H:i:s'),
+            'to'   => $to->format('Y-m-d H:i:s'),
         ], [
             'from' => Types::DATETIME_MUTABLE,
-            'to' => Types::DATETIME_MUTABLE,
+            'to'   => Types::DATETIME_MUTABLE,
         ]);
 
         return array_map('strval', $comments);
