@@ -13,6 +13,8 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class UserService
 {
+    private const PLACEHOLDER_PASSWORD_HASH = '$2y$12$9RCE7YJF7uXI2H7nuQjReuRPq2CunbhB1zZ4ywcUibotF5fQ/t9lK';
+
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly UserRepository $userRepository
@@ -36,6 +38,16 @@ class UserService
             $user->setExternalId($payload['externalId']);
             $user->setCreatedAt(new DateTimeImmutable());
             $isNew = true;
+        }
+
+        if (isset($payload['email']) && is_string($payload['email']) && $payload['email'] !== '') {
+            $user->setEmail($payload['email']);
+        } elseif ($user->getEmail() === null) {
+            $user->setEmail($payload['externalId']);
+        }
+
+        if ($user->getPassword() === null) {
+            $user->setPassword(self::PLACEHOLDER_PASSWORD_HASH);
         }
 
         $user->setDisplayName($payload['displayName'] ?? $user->getDisplayName());

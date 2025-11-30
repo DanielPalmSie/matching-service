@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Request;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -19,6 +23,15 @@ class User
 
     #[ORM\Column(length: 255)]
     private string $externalId;
+
+    #[ORM\Column(length: 180, unique: true)]
+    private ?string $email = null;
+
+    #[ORM\Column(type: Types::JSON)]
+    private array $roles = ['ROLE_USER'];
+
+    #[ORM\Column]
+    private ?string $password = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $displayName = null;
@@ -53,7 +66,6 @@ class User
         $this->createdAt = new \DateTimeImmutable();
     }
 
-
     public function getId(): ?int
     {
         return $this->id;
@@ -69,6 +81,61 @@ class User
         $this->externalId = $externalId;
 
         return $this;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): static
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+        $roles[] = 'ROLE_USER';
+
+        return array_values(array_unique($roles));
+    }
+
+    /**
+     * @param array<int, string> $roles
+     */
+    public function setRoles(array $roles): static
+    {
+        $this->roles = $roles;
+
+        return $this;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
+    public function eraseCredentials(): void
+    {
+        // Clear temporary, sensitive data if needed.
     }
 
     public function getDisplayName(): ?string
@@ -176,7 +243,6 @@ class User
     public function removeRequest(Request $request): static
     {
         if ($this->requests->removeElement($request)) {
-            // set the owning side to null (unless already changed)
             if ($request->getOwner() === $this) {
                 $request->setOwner(null);
             }
