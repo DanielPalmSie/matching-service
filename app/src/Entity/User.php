@@ -32,6 +32,12 @@ class User
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $timezone = null;
 
+    #[ORM\Column(type: 'float', nullable: true)]
+    private ?float $lat = null;
+
+    #[ORM\Column(type: 'float', nullable: true)]
+    private ?float $lng = null;
+
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
@@ -109,6 +115,30 @@ class User
     public function setTimezone(?string $timezone): static
     {
         $this->timezone = $timezone;
+
+        return $this;
+    }
+
+    public function getLat(): ?float
+    {
+        return $this->lat;
+    }
+
+    public function setLat(?float $lat): static
+    {
+        $this->lat = $lat;
+
+        return $this;
+    }
+
+    public function getLng(): ?float
+    {
+        return $this->lng;
+    }
+
+    public function setLng(?float $lng): static
+    {
+        $this->lng = $lng;
 
         return $this;
     }
