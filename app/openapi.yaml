@@ -154,6 +154,26 @@ paths:
                 $ref: '#/components/schemas/Error'
         '500':
           description: Unexpected error while fetching the user.
+  /api/login:
+    post:
+      tags: [Auth]
+      summary: Log in with email and password
+      description: Authenticates a user and returns a JWT token for subsequent API calls.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginPayload'
+      responses:
+        '200':
+          description: User authenticated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials supplied.
 components:
   schemas:
     RequestPayload:
@@ -267,6 +287,27 @@ components:
           nullable: true
           example: Europe/London
           description: Optional timezone identifier.
+    LoginPayload:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+          description: Email address of the registered user.
+        password:
+          type: string
+          format: password
+          example: StrongPassword123!
+          description: Plain password for authentication.
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+          description: JWT token to include in the Authorization header as `Bearer <token>`.
     User:
       type: object
       properties:
