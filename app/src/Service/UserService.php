@@ -10,14 +10,14 @@ use App\Service\Exception\NotFoundException;
 use App\Service\Exception\ValidationException;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserService
 {
-    private const PLACEHOLDER_PASSWORD_HASH = '$2y$12$9RCE7YJF7uXI2H7nuQjReuRPq2CunbhB1zZ4ywcUibotF5fQ/t9lK';
-
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly UserRepository $userRepository
+        private readonly UserRepository $userRepository,
+        private readonly UserPasswordHasherInterface $passwordHasher,
     ) {
     }
 
@@ -45,8 +45,18 @@ class UserService
             $user->setEmail($payload['externalId']);
         }
 
+        $password = $payload['password'] ?? null;
+
         if ($isNew) {
-            $user->setPassword(self::PLACEHOLDER_PASSWORD_HASH);
+            if (!is_string($password) || $password === '') {
+                throw new ValidationException('Invalid payload: password is required for new user.');
+            }
+
+            $hashed = $this->passwordHasher->hashPassword($user, $password);
+            $user->setPassword($hashed);
+        } elseif (is_string($password) && $password !== '') {
+            $hashed = $this->passwordHasher->hashPassword($user, $password);
+            $user->setPassword($hashed);
         }
 
         $user->setDisplayName($payload['displayName'] ?? $user->getDisplayName());
