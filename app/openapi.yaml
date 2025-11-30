@@ -4,6 +4,62 @@ info:
   version: '1.0.0'
   description: OpenAPI documentation for matching service endpoints.
 paths:
+  /api/feedback/match:
+    post:
+      tags: [Feedback]
+      summary: Submit match feedback
+      description: Stores user feedback for a specific match.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchFeedbackRequest'
+      responses:
+        '201':
+          description: Feedback stored successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+        '400':
+          description: Invalid payload supplied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/feedback/app:
+    post:
+      tags: [Feedback]
+      summary: Submit app feedback
+      description: Stores app-level ratings and comments from the user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppFeedbackRequest'
+      responses:
+        '201':
+          description: App feedback stored successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+        '400':
+          description: Invalid payload supplied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/requests:
     post:
       tags: [Requests]
@@ -343,3 +399,59 @@ components:
         error:
           type: string
           example: Message detailing what went wrong.
+    MatchFeedbackRequest:
+      type: object
+      required: [userId, relevanceScore]
+      properties:
+        userId:
+          type: integer
+          example: 123
+        matchId:
+          type: integer
+          nullable: true
+          example: 456
+        targetRequestId:
+          type: integer
+          nullable: true
+          example: 789
+        relevanceScore:
+          type: integer
+          enum: [-1, 0, 1, 2]
+          description: Relevance score provided by the user.
+          example: 1
+        reasonCode:
+          $ref: '#/components/schemas/ReasonCode'
+        comment:
+          type: string
+          nullable: true
+          example: optional
+        mainIssue:
+          $ref: '#/components/schemas/MainIssue'
+    AppFeedbackRequest:
+      type: object
+      required: [userId, rating]
+      properties:
+        userId:
+          type: integer
+          example: 123
+        rating:
+          $ref: '#/components/schemas/Rating'
+        mainIssue:
+          $ref: '#/components/schemas/MainIssue'
+        comment:
+          type: string
+          nullable: true
+          example: optional
+    ReasonCode:
+      type: string
+      enum: [not_relevant, too_far, old_request, spam, language_mismatch]
+      example: not_relevant
+    MainIssue:
+      type: string
+      enum: [irrelevant_matches, few_users, missing_features, bugs, performance, hard_to_use, other]
+      example: few_users
+    Rating:
+      type: integer
+      minimum: 1
+      maximum: 5
+      example: 4
