@@ -46,5 +46,17 @@ services:
     depends_on:
       - db
 
+  mercure:
+    image: dunglas/mercure
+    container_name: symfony-mercure
+    environment:
+      SERVER_NAME: ':80'
+      MERCURE_PUBLISHER_JWT_KEY: '!ChangeMeMercureJwtSecret!'
+      MERCURE_SUBSCRIBER_JWT_KEY: '!ChangeMeMercureJwtSecret!'
+      MERCURE_EXTRA_DIRECTIVES: |
+        cors_origins http://localhost:8080 http://localhost http://127.0.0.1:8080
+    ports:
+      - "8081:80"
+
 volumes:
   pgdata:
