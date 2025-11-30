@@ -1,14 +1,55 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Entity;
 
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Gesdinet\JWTRefreshTokenBundle\Entity\RefreshToken as BaseRefreshToken;
+use Gesdinet\JWTRefreshTokenBundle\Entity\RefreshTokenRepository;
+use Gesdinet\JWTRefreshTokenBundle\Model\AbstractRefreshToken as BaseAbstractRefreshToken;
 
-#[ORM\Entity]
-#[ORM\Table(name: 'refresh_tokens')]
-class RefreshToken extends BaseRefreshToken
+#[
+    ORM\Entity(
+        repositoryClass: RefreshTokenRepository::class,
+    ),
+    ORM\Table('refresh_tokens')
+]
+class RefreshToken extends BaseAbstractRefreshToken
 {
+    #[
+        ORM\Id,
+        ORM\Column(
+            name: 'id',
+            type: Types::INTEGER,
+            nullable: false,
+        ),
+        ORM\GeneratedValue(strategy: 'AUTO'),
+    ]
+    protected $id;
+
+    #[
+        ORM\Column(
+            name: 'refresh_token',
+            type: Types::STRING,
+            nullable: false,
+        )
+    ]
+    protected $refreshToken;
+
+    #[
+        ORM\Column(
+            name: 'username',
+            type: Types::STRING,
+            nullable: false,
+        ),
+    ]
+    protected $username;
+
+    #[
+        ORM\Column(
+            name: 'valid',
+            type: Types::DATETIME_MUTABLE,
+            nullable: false,
+        )
+    ]
+    protected $valid;
 }
