@@ -59,6 +59,8 @@
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/symfony/var-exporter" />
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/symfony/yaml" />
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/clue/ndjson-react" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/doctrine/data-fixtures" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/doctrine/doctrine-fixtures-bundle" />
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/dompdf/dompdf" />
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/dompdf/php-font-lib" />
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/dompdf/php-svg-lib" />
