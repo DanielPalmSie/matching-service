@@ -25,13 +25,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private string $externalId;
 
     #[ORM\Column(length: 180, unique: true)]
-    private ?string $email = null;
+    private string $email;
 
+    /**
+     * @var list<string>
+     */
     #[ORM\Column(type: Types::JSON)]
     private array $roles = ['ROLE_USER'];
 
+
     #[ORM\Column]
-    private ?string $password = null;
+    private string $password;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $displayName = null;
@@ -83,7 +87,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getEmail(): ?string
+    public function getEmail(): string
     {
         return $this->email;
     }
@@ -95,13 +99,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /**
+     * @return non-empty-string
+     */
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        assert($this->email !== '');
+
+        return $this->email;
     }
 
     /**
-     * @return array<int, string>
+     * @return list<string>
      */
     public function getRoles(): array
     {
@@ -112,7 +121,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * @param array<int, string> $roles
+     * @param list<string> $roles
      */
     public function setRoles(array $roles): static
     {
@@ -121,7 +130,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getPassword(): ?string
+    public function getPassword(): string
     {
         return $this->password;
     }

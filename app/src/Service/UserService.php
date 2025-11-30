@@ -31,22 +31,21 @@ class UserService
         $this->assertExternalId($payload['externalId'] ?? null);
 
         $user = $this->userRepository->findOneBy(['externalId' => $payload['externalId']]);
-        $isNew = false;
+        $isNew = $user === null;
 
         if ($user === null) {
             $user = new User();
             $user->setExternalId($payload['externalId']);
             $user->setCreatedAt(new DateTimeImmutable());
-            $isNew = true;
         }
 
         if (isset($payload['email']) && is_string($payload['email']) && $payload['email'] !== '') {
             $user->setEmail($payload['email']);
-        } elseif ($user->getEmail() === null) {
+        } elseif ($isNew) {
             $user->setEmail($payload['externalId']);
         }
 
-        if ($user->getPassword() === null) {
+        if ($isNew) {
             $user->setPassword(self::PLACEHOLDER_PASSWORD_HASH);
         }
 
