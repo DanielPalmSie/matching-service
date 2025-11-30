@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Feedback;
 
-use App\DTO\Feedback\MatchFeedbackRequest;
+use App\Dto\Feedback\MatchFeedbackRequest;
 use App\Service\FeedbackService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

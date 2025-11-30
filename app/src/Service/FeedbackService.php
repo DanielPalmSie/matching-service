@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\DTO\Feedback\AppFeedbackRequest;
-use App\DTO\Feedback\MatchFeedbackRequest;
+use App\Dto\Feedback\AppFeedbackRequest;
+use App\Dto\Feedback\MatchFeedbackRequest;
 use App\Entity\AppFeedback;
 use App\Entity\MatchFeedback;
 use Doctrine\ORM\EntityManagerInterface;
