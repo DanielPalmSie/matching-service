@@ -1,0 +1,323 @@
+{
+	"info": {
+		"_postman_id": "f1b8d7d5-fddf-4100-8886-c1f3cf28bc91",
+		"name": "Matching API (Symfony MVP)",
+		"description": "Коллекция для проверки основных роутов Symfony Matching API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "6160005"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();",
+									"if (json.token) pm.collectionVariables.set('access_token', json.token);",
+									"if (json.refresh_token) pm.collectionVariables.set('refresh_token', json.refresh_token);",
+									"pm.test('Login returned token', () => pm.expect(json.token).to.exist);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"StrongPassword123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();",
+									"if (json.token) pm.collectionVariables.set('access_token', json.token);",
+									"if (json.refresh_token) pm.collectionVariables.set('refresh_token', json.refresh_token);",
+									"pm.test('Refresh returned new token', () => pm.expect(json.token).to.exist);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/token/refresh",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"token",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Create or Update User",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"externalId\": \"test-user-1\",\n  \"displayName\": \"Test User\",\n  \"city\": \"Munich\",\n  \"country\": \"DE\",\n  \"timezone\": \"Europe/Berlin\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/users",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get User by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/users/{{user_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"{{user_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Request",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"ownerId\": {{user_id}},\n  \"rawText\": \"I just arrived in Tokyo and want to go to the theatre tonight\",\n  \"type\": \"meet\",\n  \"city\": \"Tokyo\",\n  \"country\": \"JP\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/requests",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"requests"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Request by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/requests/{{request_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"requests",
+						"{{request_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Matches for Request",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/requests/{{request_id}}/matches?limit=20",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"requests",
+						"{{request_id}}",
+						"matches"
+					],
+					"query": [
+						{
+							"key": "limit",
+							"value": "20"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Register User",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"new.user@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/register",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Current User",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/me",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"me"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Глобальный pre-request: если есть access_token, подставляем Authorization",
+					"const token = pm.collectionVariables.get('access_token');",
+					"if (token) {",
+					"    if (pm.request.auth && pm.request.auth.type === 'bearer') {",
+					"        pm.request.auth.bearer.clear();",
+					"        pm.request.auth.bearer.add({ key: 'token', value: token, type: 'string' });",
+					"    } else {",
+					"        pm.request.headers.upsert({ key: 'Authorization', value: `Bearer ${token}` });",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "user_id",
+			"value": "1"
+		},
+		{
+			"key": "request_id",
+			"value": "1"
+		},
+		{
+			"key": "access_token",
+			"value": ""
+		},
+		{
+			"key": "refresh_token",
+			"value": ""
+		}
+	]
+}
