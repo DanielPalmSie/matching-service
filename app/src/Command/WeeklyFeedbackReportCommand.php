@@ -92,11 +92,11 @@ class WeeklyFeedbackReportCommand extends Command
             ORDER BY created_at ASC";
 
         $comments = $this->connection->fetchFirstColumn($sql, [
-            'from' => $from->format('Y-m-d H:i:s'),
-            'to'   => $to->format('Y-m-d H:i:s'),
+            'from' => $from,
+            'to'   => $to,
         ], [
-            'from' => Types::DATETIME_MUTABLE,
-            'to'   => Types::DATETIME_MUTABLE,
+            'from' => Types::DATETIME_IMMUTABLE,
+            'to'   => Types::DATETIME_IMMUTABLE,
         ]);
 
         return array_map('strval', $comments);
@@ -162,29 +162,36 @@ class WeeklyFeedbackReportCommand extends Command
         }
 
         $sql = sprintf(
-            'SELECT %s AS label, COUNT(*) AS total FROM match_feedback WHERE created_at >= :from AND created_at < :to GROUP BY %s ORDER BY total DESC',
+            'SELECT %s AS label, COUNT(*) AS total
+         FROM match_feedback
+         WHERE created_at >= :from AND created_at < :to
+         GROUP BY %s
+         ORDER BY total DESC',
             $column,
             $column
         );
 
         return $this->connection->fetchAllAssociative($sql, [
-            'from' => $from->format('Y-m-d H:i:s'),
-            'to' => $to->format('Y-m-d H:i:s'),
+            'from' => $from,
+            'to'   => $to,
         ], [
-            'from' => Types::DATETIME_MUTABLE,
-            'to' => Types::DATETIME_MUTABLE,
+            'from' => Types::DATETIME_IMMUTABLE,
+            'to'   => Types::DATETIME_IMMUTABLE,
         ]);
     }
 
     private function fetchAverageRelevance(DateTimeImmutable $from, DateTimeImmutable $to): float
     {
-        $sql = 'SELECT AVG(relevance_score) FROM match_feedback WHERE created_at >= :from AND created_at < :to';
+        $sql = 'SELECT AVG(relevance_score)
+            FROM match_feedback
+            WHERE created_at >= :from AND created_at < :to';
+
         $average = $this->connection->fetchOne($sql, [
-            'from' => $from->format('Y-m-d H:i:s'),
-            'to' => $to->format('Y-m-d H:i:s'),
+            'from' => $from,
+            'to'   => $to,
         ], [
-            'from' => Types::DATETIME_MUTABLE,
-            'to' => Types::DATETIME_MUTABLE,
+            'from' => Types::DATETIME_IMMUTABLE,
+            'to'   => Types::DATETIME_IMMUTABLE,
         ]);
 
         return $average !== null ? (float) $average : 0.0;

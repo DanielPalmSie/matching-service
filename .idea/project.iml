@@ -100,6 +100,7 @@
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/sebastian/diff" />
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/symfony/asset" />
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/symfony/clock" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/symfony/google-mailer" />
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/symfony/mailer" />
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/symfony/mercure" />
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/symfony/mercure-bundle" />
