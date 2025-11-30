@@ -5,7 +5,134 @@
     "description": "Коллекция для проверки основных роутов Symfony бэкенда: /api/users и /api/requests",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const token = pm.environment.get('access_token');",
+          "if (token) {",
+          "    if (pm.request.auth && pm.request.auth.type === 'bearer') {",
+          "        pm.request.auth.bearer.clear();",
+          "        pm.request.auth.bearer.add({ key: 'token', value: token, type: 'string' });",
+          "    } else {",
+          "        pm.request.headers.upsert({ key: 'Authorization', value: `Bearer ${token}` });",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ],
   "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"StrongPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "login"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let json = pm.response.json();",
+                  "",
+                  "if (json.token) {",
+                  "    pm.environment.set('access_token', json.token);",
+                  "}",
+                  "",
+                  "if (json.refresh_token) {",
+                  "    pm.environment.set('refresh_token', json.refresh_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/token/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "token",
+                "refresh"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let json = pm.response.json();",
+                  "",
+                  "if (json.token) {",
+                  "    pm.environment.set('access_token', json.token);",
+                  "}",
+                  "",
+                  "if (json.refresh_token) {",
+                  "    pm.environment.set('refresh_token', json.refresh_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
     {
       "name": "Create or Update User",
       "request": {
@@ -14,6 +141,10 @@
           {
             "key": "Content-Type",
             "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
           }
         ],
         "body": {
@@ -37,7 +168,12 @@
       "name": "Get User by ID",
       "request": {
         "method": "GET",
-        "header": [],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
         "url": {
           "raw": "{{base_url}}/api/users/{{user_id}}",
           "host": [
@@ -60,6 +196,10 @@
           {
             "key": "Content-Type",
             "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
           }
         ],
         "body": {
@@ -83,7 +223,12 @@
       "name": "Get Request by ID",
       "request": {
         "method": "GET",
-        "header": [],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
         "url": {
           "raw": "{{base_url}}/api/requests/{{request_id}}",
           "host": [
@@ -102,7 +247,12 @@
       "name": "Get Matches for Request",
       "request": {
         "method": "GET",
-        "header": [],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
         "url": {
           "raw": "{{base_url}}/api/requests/{{request_id}}/matches?limit=20",
           "host": [
@@ -152,37 +302,15 @@
       "response": []
     },
     {
-      "name": "Login",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"StrongPassword123!\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/api/login",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "api",
-            "login"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
       "name": "Get Current User",
       "request": {
         "method": "GET",
-        "header": [],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
         "url": {
           "raw": "{{base_url}}/api/me",
           "host": [
@@ -209,6 +337,14 @@
     {
       "key": "request_id",
       "value": "1"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "refresh_token",
+      "value": ""
     }
   ]
 }

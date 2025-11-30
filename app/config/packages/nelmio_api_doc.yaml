@@ -5,6 +5,14 @@ nelmio_api_doc:
             title: 'Matching Service API'
             description: 'OpenAPI documentation for matching service endpoints.'
             version: '1.0.0'
+        components:
+            securitySchemes:
+                BearerAuth:
+                    type: http
+                    scheme: bearer
+                    bearerFormat: JWT
+        security:
+            - BearerAuth: []
     areas:
         default:
             path_patterns:
