@@ -1351,6 +1351,12 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *             always_remember_me?: bool, // Default: false
  *             remember_me_parameter?: scalar|null, // Default: "_remember_me"
  *         },
+ *         refresh_jwt?: array{
+ *             check_path?: scalar|null, // Default: null
+ *             provider?: scalar|null,
+ *             success_handler?: scalar|null,
+ *             failure_handler?: scalar|null,
+ *         },
  *     }>,
  *     access_control?: list<array{ // Default: []
  *         request_matcher?: scalar|null, // Default: null
@@ -1452,6 +1458,35 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         cache?: scalar|null, // Storage to track blocked tokens // Default: "cache.app"
  *     },
  * }
+ * @psalm-type GesdinetJwtRefreshTokenConfig = array{
+ *     ttl?: int, // The default TTL for all authenticators. // Default: 2592000
+ *     ttl_update?: bool, // The default update TTL flag for all authenticators. // Default: false
+ *     firewall?: scalar|null, // Deprecated: The "firewall" node is deprecated without replacement. // Default: "api"
+ *     user_provider?: scalar|null, // Deprecated: The "user_provider" node is deprecated without replacement. // Default: null
+ *     user_identity_field?: scalar|null, // Deprecated: The "user_identity_field" node is deprecated without replacement. // Default: "username"
+ *     manager_type?: scalar|null, // Set the type of object manager to use (default: orm) // Default: "orm"
+ *     refresh_token_class?: scalar|null, // Set the refresh token class to use (default: Gesdinet\JWTRefreshTokenBundle\Entity\RefreshToken) // Default: null
+ *     object_manager?: scalar|null, // Set the object manager to use (default: doctrine.orm.entity_manager) // Default: null
+ *     user_checker?: scalar|null, // Deprecated: The "user_checker" node is deprecated without replacement. // Default: "security.user_checker"
+ *     refresh_token_entity?: scalar|null, // Deprecated: The "refresh_token_entity" node is deprecated, use the "refresh_token_class" node instead. // Set the refresh token class to use (default: Gesdinet\JWTRefreshTokenBundle\Entity\RefreshToken) // Default: null
+ *     entity_manager?: scalar|null, // Deprecated: The "entity_manager" node is deprecated, use the "object_manager" node instead. // Set the entity manager to use // Default: null
+ *     single_use?: scalar|null, // When true, generate a new refresh token on consumption (deleting the old one) // Default: false
+ *     token_parameter_name?: scalar|null, // The default request parameter name containing the refresh token for all authenticators. // Default: "refresh_token"
+ *     doctrine_mappings?: bool, // Deprecated: The "doctrine_mappings" node is deprecated without replacement. // When true, resolving of Doctrine mapping is done automatically to use either ORM or ODM object manager // Default: true
+ *     cookie?: bool|array{
+ *         enabled?: bool, // Default: false
+ *         same_site?: "none"|"lax"|"strict", // Default: "lax"
+ *         path?: scalar|null, // Default: "/"
+ *         domain?: scalar|null, // Default: null
+ *         http_only?: scalar|null, // Default: true
+ *         secure?: scalar|null, // Default: true
+ *         partitioned?: scalar|null, // Default: false
+ *         remove_token_from_body?: scalar|null, // Default: true
+ *     },
+ *     logout_firewall?: scalar|null, // Name of the firewall that triggers the logout event to hook into (default: api) // Default: "api"
+ *     return_expiration?: scalar|null, // When true, the response will include the token expiration timestamp // Default: false
+ *     return_expiration_parameter_name?: scalar|null, // The default response parameter name containing the refresh token expiration timestamp // Default: "refresh_token_expiration"
+ * }
  * @psalm-type ConfigType = array{
  *     imports?: ImportsConfig,
  *     parameters?: ParametersConfig,
@@ -1464,6 +1499,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     mercure?: MercureConfig,
  *     security?: SecurityConfig,
  *     lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
+ *     gesdinet_jwt_refresh_token?: GesdinetJwtRefreshTokenConfig,
  *     "when@dev"?: array{
  *         imports?: ImportsConfig,
  *         parameters?: ParametersConfig,
@@ -1477,6 +1513,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         mercure?: MercureConfig,
  *         security?: SecurityConfig,
  *         lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
+ *         gesdinet_jwt_refresh_token?: GesdinetJwtRefreshTokenConfig,
  *     },
  *     "when@prod"?: array{
  *         imports?: ImportsConfig,
@@ -1490,6 +1527,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         mercure?: MercureConfig,
  *         security?: SecurityConfig,
  *         lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
+ *         gesdinet_jwt_refresh_token?: GesdinetJwtRefreshTokenConfig,
  *     },
  *     "when@test"?: array{
  *         imports?: ImportsConfig,
@@ -1503,6 +1541,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         mercure?: MercureConfig,
  *         security?: SecurityConfig,
  *         lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
+ *         gesdinet_jwt_refresh_token?: GesdinetJwtRefreshTokenConfig,
  *     },
  *     ...<string, ExtensionType|array{ // extra keys must follow the when@%env% pattern or match an extension alias
  *         imports?: ImportsConfig,
