@@ -84,7 +84,7 @@ class ChatService
         $update = new Update(
             sprintf('/chats/%d', $message->getChat()->getId()),
             $payload,
-            private: $this->buildAudience($message->getChat()),
+            private: true
         );
 
         $this->hub->publish($update);
@@ -98,7 +98,7 @@ class ChatService
         $update = new Update(
             sprintf('/chats/%d', $message->getChat()->getId()),
             $payload,
-            private: $this->buildAudience($message->getChat()),
+            private: true
         );
 
         $this->hub->publish($update);
@@ -109,16 +109,5 @@ class ChatService
         if (!$chat->getParticipants()->contains($user)) {
             throw new ValidationException('User is not a participant of the chat.');
         }
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function buildAudience(Chat $chat): array
-    {
-        return array_map(
-            static fn (User $participant): string => (string) $participant->getId(),
-            $chat->getParticipants()->toArray(),
-        );
     }
 }
