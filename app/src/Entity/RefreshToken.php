@@ -1,20 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
-use App\Repository\RefreshTokenRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Gesdinet\JWTRefreshTokenBundle\Entity\RefreshToken as BaseRefreshToken;
 
-#[ORM\Entity(repositoryClass: RefreshTokenRepository::class)]
-class RefreshToken
+#[ORM\Entity]
+#[ORM\Table(name: 'refresh_tokens')]
+class RefreshToken extends BaseRefreshToken
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
-
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
 }
