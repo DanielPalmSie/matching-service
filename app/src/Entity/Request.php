@@ -30,6 +30,12 @@ class Request
     #[ORM\Column(length: 3, nullable: true)]
     private ?string $country = null;
 
+    #[ORM\Column(type: 'float', nullable: true)]
+    private ?float $lat = null;
+
+    #[ORM\Column(type: 'float', nullable: true)]
+    private ?float $lng = null;
+
     #[ORM\Column(length: 20)]
     private string $status;
 
@@ -109,6 +115,30 @@ class Request
     public function setCountry(?string $country): static
     {
         $this->country = $country;
+
+        return $this;
+    }
+
+    public function getLat(): ?float
+    {
+        return $this->lat;
+    }
+
+    public function setLat(?float $lat): static
+    {
+        $this->lat = $lat;
+
+        return $this;
+    }
+
+    public function getLng(): ?float
+    {
+        return $this->lng;
+    }
+
+    public function setLng(?float $lng): static
+    {
+        $this->lng = $lng;
 
         return $this;
     }
