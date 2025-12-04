@@ -32,6 +32,11 @@ security:
                 check_path: /api/token/refresh
                 provider: app_user_provider
 
+        register:
+            pattern: ^/api/register
+            stateless: true
+            security: false
+
         api:
             pattern: ^/api
             stateless: true
