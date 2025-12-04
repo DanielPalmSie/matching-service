@@ -123,6 +123,12 @@
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/twig/twig" />
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/webmozart/assert" />
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/zircote/swagger-php" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/guzzlehttp/psr7" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/jean85/pretty-package-versions" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/ralouphie/getallheaders" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/sentry/sentry" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/sentry/sentry-symfony" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/symfony/psr-http-message-bridge" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
