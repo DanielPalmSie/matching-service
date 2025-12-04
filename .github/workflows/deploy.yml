@@ -22,8 +22,26 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd /srv/matching-service
+
+            echo ">>> Pull changes"
             git pull origin main
+
+            echo ">>> Clear Symfony cache (prod)"
+            docker compose -f docker-compose.prod.yml run --rm php php bin/console cache:clear --env=prod || true
+            docker compose -f docker-compose.prod.yml run --rm php php bin/console cache:pool:clear cache.global_clearer || true
+            rm -rf var/cache/prod || true
+
+            echo ">>> Pull new images"
             docker compose -f docker-compose.prod.yml pull || true
+
+            echo ">>> Rebuild and restart"
             docker compose -f docker-compose.prod.yml up -d --build
+
+            echo ">>> Run migrations"
             docker compose -f docker-compose.prod.yml exec php php bin/console doctrine:migrations:migrate --no-interaction --env=prod || true
-            docker image prune -f
+
+            echo ">>> Docker prune"
+            docker system prune -f || true
+            docker image prune -f || true
+
+            echo ">>> Deployment finished"
