@@ -38,3 +38,11 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    Sentry\Monolog\Handler::class:
+        class: Sentry\Monolog\Handler
+        arguments:
+            $hub: '@Sentry\State\HubInterface'
+            $level: 'error'
+            $bubble: true
+
