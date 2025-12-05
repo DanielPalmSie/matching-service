@@ -26,10 +26,15 @@ jobs:
             echo ">>> Pull changes"
             git pull origin main
 
+            echo ">>> Install/update PHP dependencies (composer install)"
+            cd /srv/matching-service/app
+            docker compose -f ../docker-compose.prod.yml run --rm php composer install --no-dev --optimize-autoloader
+            cd /srv/matching-service
+
             echo ">>> Clear Symfony cache (prod)"
             docker compose -f docker-compose.prod.yml run --rm php php bin/console cache:clear --env=prod || true
             docker compose -f docker-compose.prod.yml run --rm php php bin/console cache:pool:clear cache.global_clearer || true
-            rm -rf var/cache/prod || true
+            rm -rf app/var/cache/prod || true
 
             echo ">>> Pull new images"
             docker compose -f docker-compose.prod.yml pull || true
