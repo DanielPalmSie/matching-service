@@ -47,8 +47,7 @@ when@prod:
                 formatter: monolog.formatter.json
 
             sentry:
-                type: service
-                id: Sentry\Bridge\MonologV3\Handler
+                type: sentry
                 level: error
                 channels: ["!event", "!doctrine", "!deprecation"]
 
