@@ -13,7 +13,7 @@ class SentryTestController extends AbstractController
     }
 
     #[Route('/_sentry-test', name: 'sentry_test')]
-    public function testLog()
+    public function testLog(): void
     {
         // Проверка, что monolog шлёт в Sentry
         $this->logger->error('My custom logged error.', ['some' => 'Context Data']);
