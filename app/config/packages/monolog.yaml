@@ -32,34 +32,25 @@ when@test:
 when@prod:
     monolog:
         handlers:
-
             main:
                 type: fingers_crossed
                 action_level: error
-                handler: grouped
+                handler: nested
                 excluded_http_codes: [404, 405]
                 channels: ["!deprecation"]
                 buffer_size: 50
 
-            grouped:
-                type: group
-                handlers: [sentry, file_errors, stderr_nested]
-
-            stderr_nested:
+            nested:
                 type: stream
                 path: php://stderr
                 level: debug
                 formatter: monolog.formatter.json
 
-            file_errors:
-                type: stream
-                path: "%kernel.logs_dir%/prod_errors.log"
-                level: error
-                formatter: monolog.formatter.json
-
             sentry:
-                type: sentry
+                type: service
+                id: Sentry\Bridge\MonologV3\Handler
                 level: error
+                channels: ["!event", "!doctrine", "!deprecation"]
 
             deprecation:
                 type: stream
