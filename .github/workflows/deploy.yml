@@ -26,29 +26,26 @@ jobs:
             echo ">>> Pull changes"
             git pull origin main
 
-            echo ">>> Install/update PHP dependencies (composer install)"
-            cd /srv/matching-service/app
-            docker compose -f ../docker-compose.prod.yml run --rm php composer install --no-dev --optimize-autoloader
-            cd /srv/matching-service
-
-            echo ">>> Clear Symfony cache (prod)"
-            docker compose -f docker-compose.prod.yml run --rm php php bin/console cache:clear --env=prod || true
-            docker compose -f docker-compose.prod.yml run --rm php php bin/console cache:pool:clear cache.global_clearer || true
-            rm -rf app/var/cache/prod || true
-            
-            echo ">>> Fix permissions on var"
-            docker compose -f docker-compose.prod.yml exec php chown -R www-data:www-data var || true
-
             echo ">>> Pull new images"
             docker compose -f docker-compose.prod.yml pull || true
 
-            echo ">>> Rebuild and restart"
+            echo ">>> Rebuild containers"
             docker compose -f docker-compose.prod.yml up -d --build
 
-            echo ">>> Run migrations"
-            docker compose -f docker-compose.prod.yml exec php php bin/console doctrine:migrations:migrate --no-interaction --env=prod || true
+            echo ">>> Install PHP deps inside main php container"
+            docker compose -f docker-compose.prod.yml exec php composer install --no-dev --optimize-autoloader
 
-            echo ">>> Docker prune"
+            echo ">>> Clear Symfony cache properly"
+            docker compose -f docker-compose.prod.yml exec php php bin/console cache:clear --env=prod
+            docker compose -f docker-compose.prod.yml exec php php bin/console cache:pool:clear cache.global_clearer
+
+            echo ">>> Fix permissions on var & vendor"
+            docker compose -f docker-compose.prod.yml exec php chown -R www-data:www-data var vendor
+
+            echo ">>> Run migrations"
+            docker compose -f docker-compose.prod.yml exec php php bin/console doctrine:migrations:migrate --no-interaction --env=prod
+
+            echo ">>> Cleanup"
             docker system prune -f || true
             docker image prune -f || true
 
