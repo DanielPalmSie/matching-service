@@ -48,12 +48,14 @@ class UserService
         $password = $payload['password'] ?? null;
 
         if ($isNew) {
-            if (!is_string($password) || $password === '') {
-                throw new ValidationException('Invalid payload: password is required for new user.');
+            if (is_string($password) && $password !== '') {
+                $hashed = $this->passwordHasher->hashPassword($user, $password);
+                $user->setPassword($hashed);
+            } else {
+                $generatedPassword = bin2hex(random_bytes(16));
+                $hashed = $this->passwordHasher->hashPassword($user, $generatedPassword);
+                $user->setPassword($hashed);
             }
-
-            $hashed = $this->passwordHasher->hashPassword($user, $password);
-            $user->setPassword($hashed);
         } elseif (is_string($password) && $password !== '') {
             $hashed = $this->passwordHasher->hashPassword($user, $password);
             $user->setPassword($hashed);
