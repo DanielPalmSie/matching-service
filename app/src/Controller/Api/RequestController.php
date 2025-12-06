@@ -95,7 +95,12 @@ class RequestController extends AbstractController
         return new JsonResponse($data);
     }
 
-    #[Route('/api/requests/{id}', name: 'api_requests_get', methods: ['GET'])]
+    #[Route(
+        '/api/requests/{id}',
+        name: 'api_requests_get',
+        methods: ['GET'],
+        requirements: ['id' => '\\d+']
+    )]
     #[OA\Get(
         path: '/api/requests/{id}',
         summary: 'Get request details',
@@ -141,7 +146,7 @@ class RequestController extends AbstractController
         return new JsonResponse($data);
     }
 
-    #[Route('/api/requests/mine', name: 'api_requests_my_list', methods: ['GET'])]
+    #[Route('/api/requests/mine', name: 'api_requests_mine', methods: ['GET'])]
     #[OA\Get(
         path: '/api/requests/mine',
         summary: 'List requests for the current user',
@@ -175,6 +180,12 @@ class RequestController extends AbstractController
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'User not authenticated.'),
         ],
     )]
+    /**
+     * Lists active requests created by the currently authenticated user.
+     *
+     * This endpoint is intended for clients such as the Telegram bot to show the
+     * caller their own open requests without requiring an explicit user identifier.
+     */
     public function listMine(Request $request): JsonResponse
     {
         $currentUser = $this->getUser();
