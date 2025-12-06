@@ -19,7 +19,7 @@ class ChatService
         private readonly EntityManagerInterface $entityManager,
         private readonly ChatRepository $chatRepository,
         private readonly HubInterface $hub,
-        /*        private readonly ChatDtoFactory $chatDtoFactory,*/
+        private readonly ChatDtoFactory $chatDtoFactory,
     ) {
     }
 
@@ -56,7 +56,7 @@ class ChatService
         $this->entityManager->persist($message);
         $this->entityManager->flush();
 
-        /*$this->publishMessage($message);*/
+        $this->publishMessage($message);
 
         return $message;
     }
@@ -90,7 +90,7 @@ class ChatService
         $this->hub->publish($update);
     }
 
-    /*private function publishMessage(Message $message): void
+    private function publishMessage(Message $message): void
     {
         $messageDto = $this->chatDtoFactory->createMessageDto($message);
         $payload = json_encode($messageDto, JSON_THROW_ON_ERROR);
@@ -102,7 +102,7 @@ class ChatService
         );
 
         $this->hub->publish($update);
-    }*/
+    }
 
     private function assertParticipant(Chat $chat, User $user): void
     {
