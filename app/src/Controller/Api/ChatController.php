@@ -15,12 +15,16 @@ use App\Service\Chat\ChatDtoFactory;
 use App\Service\Chat\ChatService;
 use App\Service\Exception\ValidationException;
 use OpenApi\Attributes as OA;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-class ChatController
+/**
+ * Chat endpoints now rely on the authenticated user from the JWT; the legacy X-User-Id header is intentionally ignored.
+ */
+class ChatController extends AbstractController
 {
     public function __construct(
         private readonly ChatService $chatService,
@@ -44,13 +48,6 @@ class ChatController
                 required: true,
                 schema: new OA\Schema(type: 'integer'),
                 description: 'Identifier of the other participant.'
-            ),
-            new OA\Parameter(
-                name: 'X-User-Id',
-                in: 'header',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'Identifier of the authenticated user (passed through the existing gateway/security layer).'
             ),
         ],
         responses: [
@@ -85,6 +82,7 @@ class ChatController
                                 new OA\Property(property: 'isRead', type: 'boolean', example: false),
                             ],
                         ),
+                        new OA\Property(property: 'unreadCount', type: 'integer', example: 3, description: 'Unread messages for the current user'),
                     ],
                 ),
             ),
@@ -92,9 +90,9 @@ class ChatController
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Other participant not found.'),
         ],
     )]
-    public function startChat(int $userId, Request $request): JsonResponse
+    public function startChat(int $userId): JsonResponse
     {
-        $currentUser = $this->resolveCurrentUser($request);
+        $currentUser = $this->requireAuthenticatedUser();
         if ($currentUser === null) {
             return new JsonResponse(['error' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
         }
@@ -106,7 +104,7 @@ class ChatController
 
         $chat = $this->chatService->createOrGetChat($currentUser, $otherUser);
 
-        return new JsonResponse($this->chatDtoFactory->createChatListItem($chat));
+        return new JsonResponse($this->chatDtoFactory->createChatListItem($chat, $currentUser));
     }
 
     #[Route('/api/chats', name: 'api_chats_list', methods: ['GET'])]
@@ -115,15 +113,6 @@ class ChatController
         summary: 'List chats for the current user',
         description: 'Returns chat threads where the current user is a participant, sorted by the last message.',
         tags: ['Chats'],
-        parameters: [
-            new OA\Parameter(
-                name: 'X-User-Id',
-                in: 'header',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'Identifier of the authenticated user (passed through the existing gateway/security layer).'
-            ),
-        ],
         responses: [
             new OA\Response(
                 response: Response::HTTP_OK,
@@ -158,6 +147,7 @@ class ChatController
                                     new OA\Property(property: 'isRead', type: 'boolean', example: false),
                                 ],
                             ),
+                            new OA\Property(property: 'unreadCount', type: 'integer', example: 3, description: 'Unread messages for the current user'),
                         ],
                     ),
                 ),
@@ -167,13 +157,13 @@ class ChatController
     )]
     public function listChats(Request $request): JsonResponse
     {
-        $currentUser = $this->resolveCurrentUser($request);
+        $currentUser = $this->requireAuthenticatedUser();
         if ($currentUser === null) {
             return new JsonResponse(['error' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
         }
 
         $chats = $this->chatRepository->findChatsForUser($currentUser);
-        $items = array_map(fn (Chat $chat) => $this->chatDtoFactory->createChatListItem($chat), $chats);
+        $items = array_map(fn (Chat $chat) => $this->chatDtoFactory->createChatListItem($chat, $currentUser), $chats);
 
         return new JsonResponse($items);
     }
@@ -188,13 +178,6 @@ class ChatController
             new OA\Parameter(name: 'chatId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'Chat identifier'),
             new OA\Parameter(name: 'offset', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 0, default: 0), description: 'Pagination offset'),
             new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 200, default: 50), description: 'Pagination limit'),
-            new OA\Parameter(
-                name: 'X-User-Id',
-                in: 'header',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'Identifier of the authenticated user (passed through the existing gateway/security layer).'
-            ),
         ],
         responses: [
             new OA\Response(
@@ -222,7 +205,7 @@ class ChatController
     )]
     public function listMessages(int $chatId, Request $request): JsonResponse
     {
-        $currentUser = $this->resolveCurrentUser($request);
+        $currentUser = $this->requireAuthenticatedUser();
         if ($currentUser === null) {
             return new JsonResponse(['error' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
         }
@@ -252,13 +235,6 @@ class ChatController
         tags: ['Chats'],
         parameters: [
             new OA\Parameter(name: 'chatId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'Chat identifier'),
-            new OA\Parameter(
-                name: 'X-User-Id',
-                in: 'header',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'Identifier of the authenticated user (passed through the existing gateway/security layer).'
-            ),
         ],
         requestBody: new OA\RequestBody(
             required: true,
@@ -294,7 +270,7 @@ class ChatController
     )]
     public function sendMessage(int $chatId, Request $request): JsonResponse
     {
-        $currentUser = $this->resolveCurrentUser($request);
+        $currentUser = $this->requireAuthenticatedUser();
         if ($currentUser === null) {
             return new JsonResponse(['error' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
         }
@@ -333,13 +309,6 @@ class ChatController
         parameters: [
             new OA\Parameter(name: 'chatId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'Chat identifier'),
             new OA\Parameter(name: 'messageId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'Message identifier'),
-            new OA\Parameter(
-                name: 'X-User-Id',
-                in: 'header',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'Identifier of the authenticated user (passed through the existing gateway/security layer).'
-            ),
         ],
         responses: [
             new OA\Response(
@@ -355,7 +324,7 @@ class ChatController
     )]
     public function markRead(int $chatId, int $messageId, Request $request): JsonResponse
     {
-        $currentUser = $this->resolveCurrentUser($request);
+        $currentUser = $this->requireAuthenticatedUser();
         if ($currentUser === null) {
             return new JsonResponse(['error' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
         }
@@ -383,13 +352,13 @@ class ChatController
         return new JsonResponse(['status' => 'ok']);
     }
 
-    private function resolveCurrentUser(Request $request): ?User
+    private function requireAuthenticatedUser(): ?User
     {
-        $userId = $request->attributes->getInt('userId') ?: $request->headers->get('X-User-Id');
-        if ($userId === null || $userId === '') {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
             return null;
         }
 
-        return $this->userRepository->find((int) $userId);
+        return $user;
     }
 }

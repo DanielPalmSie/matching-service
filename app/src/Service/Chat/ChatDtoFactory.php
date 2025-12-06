@@ -8,6 +8,7 @@ use App\Dto\Chat\ChatListItemDTO;
 use App\Dto\Message\MessageDTO;
 use App\Entity\Chat;
 use App\Entity\Message;
+use App\Entity\User;
 use App\Repository\MessageRepository;
 
 class ChatDtoFactory
@@ -16,11 +17,12 @@ class ChatDtoFactory
     {
     }
 
-    public function createChatListItem(Chat $chat): ChatListItemDTO
+    public function createChatListItem(Chat $chat, ?User $currentUser = null): ChatListItemDTO
     {
         $lastMessage = $this->messageRepository->findLastMessageForChat($chat);
+        $unreadCount = $currentUser !== null ? $this->messageRepository->countUnreadMessagesForChatAndUser($chat, $currentUser) : 0;
 
-        return ChatListItemDTO::fromChat($chat, $lastMessage);
+        return ChatListItemDTO::fromChat($chat, $lastMessage, $unreadCount);
     }
 
     /**

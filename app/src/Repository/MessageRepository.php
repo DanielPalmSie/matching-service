@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Entity\Chat;
 use App\Entity\Message;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -43,5 +44,18 @@ class MessageRepository extends ServiceEntityRepository
             ->setParameter('chat', $chat)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    public function countUnreadMessagesForChatAndUser(Chat $chat, User $user): int
+    {
+        return (int) $this->createQueryBuilder('m')
+            ->select('COUNT(m.id)')
+            ->where('m.chat = :chat')
+            ->andWhere('m.isRead = false')
+            ->andWhere('m.sender != :user')
+            ->setParameter('chat', $chat)
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 }

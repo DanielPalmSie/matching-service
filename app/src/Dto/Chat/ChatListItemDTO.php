@@ -18,10 +18,11 @@ readonly class ChatListItemDTO
         public int $id,
         public array $participants,
         public ?MessageDTO $lastMessage,
+        public int $unreadCount = 0,
     ) {
     }
 
-    public static function fromChat(Chat $chat, ?Message $lastMessage): self
+    public static function fromChat(Chat $chat, ?Message $lastMessage, int $unreadCount = 0): self
     {
         $participants = array_map(
             static fn (User $user) => new ChatParticipantDTO($user->getId(), $user->getDisplayName()),
@@ -32,6 +33,7 @@ readonly class ChatListItemDTO
             $chat->getId(),
             $participants,
             $lastMessage !== null ? MessageDTO::fromEntity($lastMessage) : null,
+            $unreadCount,
         );
     }
 }
