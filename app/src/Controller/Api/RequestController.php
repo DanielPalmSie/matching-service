@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace App\Controller\Api;
 
+use App\Entity\User;
 use App\Service\Exception\NotFoundException;
 use App\Service\Exception\ValidationException;
 use App\Service\RequestService;
 use OpenApi\Attributes as OA;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-class RequestController
+class RequestController extends AbstractController
 {
     public function __construct(private readonly RequestService $requestService)
     {
@@ -29,9 +31,9 @@ class RequestController
             required: true,
             content: new OA\JsonContent(
                 type: 'object',
-                required: ['ownerId', 'rawText', 'type'],
+                required: ['rawText', 'type'],
                 properties: [
-                    new OA\Property(property: 'ownerId', type: 'integer', example: 10, description: 'Existing user identifier who owns the request.'),
+                    new OA\Property(property: 'ownerId', type: 'integer', example: 10, description: 'Deprecated. Owner is derived from the authenticated user and this field must match that value if provided.'),
                     new OA\Property(property: 'rawText', type: 'string', example: 'Looking for a software engineer role in Berlin', description: 'Full free-text content of the request.'),
                     new OA\Property(property: 'type', type: 'string', example: 'job', description: 'Short type name of the request.'),
                     new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Berlin', description: 'Optional city for geo filtering.'),
@@ -59,7 +61,7 @@ class RequestController
             ),
             new OA\Response(
                 response: Response::HTTP_BAD_REQUEST,
-                description: 'Validation failed (e.g. missing ownerId/rawText/type).',
+                description: 'Validation failed (e.g. missing rawText/type or mismatched owner).',
                 content: new OA\JsonContent(properties: [new OA\Property(property: 'error', type: 'string')])
             ),
             new OA\Response(
@@ -72,13 +74,18 @@ class RequestController
     )]
     public function create(Request $request): JsonResponse
     {
+        $currentUser = $this->getUser();
+        if (!$currentUser instanceof User) {
+            return new JsonResponse(['error' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
+        }
+
         $payload = json_decode($request->getContent(), true);
         if (!is_array($payload)) {
             return new JsonResponse(['error' => 'Invalid JSON body.'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         try {
-            $data = $this->requestService->createRequest($payload);
+            $data = $this->requestService->createRequest($payload, $currentUser);
         } catch (ValidationException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
         } catch (NotFoundException $exception) {
@@ -130,6 +137,55 @@ class RequestController
         } catch (NotFoundException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], JsonResponse::HTTP_NOT_FOUND);
         }
+
+        return new JsonResponse($data);
+    }
+
+    #[Route('/api/requests/mine', name: 'api_requests_my_list', methods: ['GET'])]
+    #[OA\Get(
+        path: '/api/requests/mine',
+        summary: 'List requests for the current user',
+        description: 'Returns active requests owned by the authenticated user.',
+        tags: ['Requests'],
+        parameters: [
+            new OA\Parameter(name: 'offset', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 0, default: 0), description: 'Pagination offset (optional).'),
+            new OA\Parameter(name: 'limit', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100), description: 'Maximum number of records to return (optional).'),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'List of active requests owned by the current user.',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(
+                        type: 'object',
+                        properties: [
+                            new OA\Property(property: 'id', type: 'integer', example: 42),
+                            new OA\Property(property: 'ownerId', type: 'integer', example: 10),
+                            new OA\Property(property: 'type', type: 'string', example: 'job'),
+                            new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Berlin'),
+                            new OA\Property(property: 'country', type: 'string', nullable: true, example: 'DE'),
+                            new OA\Property(property: 'status', type: 'string', example: 'active'),
+                            new OA\Property(property: 'createdAt', type: 'string', format: 'date-time', example: '2024-05-01T12:00:00+00:00'),
+                            new OA\Property(property: 'rawText', type: 'string', example: 'Looking for a software engineer role in Berlin'),
+                        ],
+                    ),
+                ),
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'User not authenticated.'),
+        ],
+    )]
+    public function listMine(Request $request): JsonResponse
+    {
+        $currentUser = $this->getUser();
+        if (!$currentUser instanceof User) {
+            return new JsonResponse(['error' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $offset = max(0, (int) $request->query->get('offset', 0));
+        $limit = $request->query->has('limit') ? (int) $request->query->get('limit') : null;
+
+        $data = $this->requestService->getRequestsForOwner($currentUser, $offset, $limit);
 
         return new JsonResponse($data);
     }
