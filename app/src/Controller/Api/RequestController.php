@@ -233,6 +233,7 @@ class RequestController extends AbstractController
                             new OA\Property(property: 'country', type: 'string', nullable: true, example: 'DE'),
                             new OA\Property(property: 'status', type: 'string', example: 'active'),
                             new OA\Property(property: 'createdAt', type: 'string', format: 'date-time', example: '2024-05-01T12:00:00+00:00'),
+                            new OA\Property(property: 'similarity', type: 'number', format: 'float', example: 0.92),
                         ],
                     ),
                 ),

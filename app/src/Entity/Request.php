@@ -42,12 +42,6 @@ class Request
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
-    /**
-     * @var array<int, float>|null
-     */
-    #[ORM\Column(type: Types::JSON, nullable: true)]
-    private ?array $embedding = null;
-
 
     public function __construct()
     {
@@ -167,21 +161,4 @@ class Request
         return $this;
     }
 
-    /**
-     * @return array<int, float>|null
-     */
-    public function getEmbedding(): ?array
-    {
-        return $this->embedding;
-    }
-
-    /**
-     * @param array<int, float>|null $embedding
-     */
-    public function setEmbedding(?array $embedding): static
-    {
-        $this->embedding = $embedding;
-
-        return $this;
-    }
 }

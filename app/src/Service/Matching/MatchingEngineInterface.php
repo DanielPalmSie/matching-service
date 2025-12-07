@@ -9,7 +9,7 @@ use App\Entity\Request;
 interface MatchingEngineInterface
 {
     /**
-     * @return Request[]
+     * @return array<int, array{request: Request, similarity: float}>
      */
     public function findMatches(Request $request, int $limit = 20): array;
 }

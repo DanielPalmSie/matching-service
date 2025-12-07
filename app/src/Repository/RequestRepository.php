@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Entity\Request;
 use App\Entity\User;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -61,5 +62,71 @@ class RequestRepository extends ServiceEntityRepository
         }
 
         return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Executes a pgvector-powered similarity search for requests owned by the nearest users.
+     *
+     * @param array<int, float> $embedding
+     *
+     * @return array<int, array{id: int, distance: float}>
+     */
+    public function findNearestByEmbedding(Request $source, array $embedding, int $limit = 20): array
+    {
+        $connection = $this->getEntityManager()->getConnection();
+
+        $conditions = ['r.status = :status', 'r.type = :type', 'r.id != :id'];
+        $parameters = [
+            'status' => 'active',
+            'type' => $source->getType(),
+            'id' => $source->getId(),
+            'query_vector' => $this->formatVector($embedding),
+            'limit' => $limit,
+        ];
+        $types = [
+            'status' => ParameterType::STRING,
+            'type' => ParameterType::STRING,
+            'id' => ParameterType::INTEGER,
+            'query_vector' => ParameterType::STRING,
+            'limit' => ParameterType::INTEGER,
+        ];
+
+        if ($source->getCity() !== null) {
+            $conditions[] = 'r.city = :city';
+            $parameters['city'] = $source->getCity();
+            $types['city'] = ParameterType::STRING;
+        } elseif ($source->getCountry() !== null) {
+            $conditions[] = 'r.country = :country';
+            $parameters['country'] = $source->getCountry();
+            $types['country'] = ParameterType::STRING;
+        }
+
+        $sql = sprintf(
+            'SELECT r.id, (ue.embedding <-> :query_vector) AS distance
+             FROM user_embeddings ue
+             INNER JOIN request r ON r.owner_id = ue.user_id
+             WHERE %s
+             ORDER BY ue.embedding <-> :query_vector
+             LIMIT :limit',
+            implode(' AND ', $conditions),
+        );
+
+        $rows = $connection->executeQuery($sql, $parameters, $types)->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => [
+                'id' => (int) $row['id'],
+                'distance' => (float) $row['distance'],
+            ],
+            $rows,
+        );
+    }
+
+    /**
+     * @param array<int, float> $embedding
+     */
+    private function formatVector(array $embedding): string
+    {
+        return '[' . implode(',', array_map(static fn ($value) => sprintf('%.12f', $value), $embedding)) . ']';
     }
 }
