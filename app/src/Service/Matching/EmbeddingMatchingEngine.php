@@ -13,8 +13,7 @@ class EmbeddingMatchingEngine implements MatchingEngineInterface
     public function __construct(
         private readonly RequestRepository $requestRepository,
         private readonly EmbeddingClientInterface $embeddingClient,
-    )
-    {
+    ) {
     }
 
     public function findMatches(Request $request, int $limit = 20): array
