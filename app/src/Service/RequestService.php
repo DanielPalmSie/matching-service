@@ -11,6 +11,7 @@ use App\Service\Embedding\EmbeddingClientInterface;
 use App\Service\Exception\NotFoundException;
 use App\Service\Exception\ValidationException;
 use App\Service\Matching\MatchingEngineInterface;
+use App\Repository\UserEmbeddingRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -20,7 +21,8 @@ class RequestService
         private readonly EntityManagerInterface $entityManager,
         private readonly RequestRepository $requestRepository,
         private readonly EmbeddingClientInterface $embeddingClient,
-        private readonly MatchingEngineInterface $matchingEngine
+        private readonly MatchingEngineInterface $matchingEngine,
+        private readonly UserEmbeddingRepository $userEmbeddingRepository,
     ) {
     }
 
@@ -44,10 +46,14 @@ class RequestService
         $requestEntity->setCountry($payload['country'] ?? null);
         $requestEntity->setStatus('active');
         $requestEntity->setCreatedAt(new DateTimeImmutable());
-        $requestEntity->setEmbedding($embedding);
 
         $this->entityManager->persist($requestEntity);
         $this->entityManager->flush();
+
+        // Keep the pgvector table in sync so matches can run directly in SQL.
+        if ($owner->getId() !== null) {
+            $this->userEmbeddingRepository->upsert($owner->getId(), $embedding);
+        }
 
         return $this->mapRequest($requestEntity);
     }
@@ -78,7 +84,10 @@ class RequestService
         $normalizedLimit = $this->normalizeLimit($limit);
         $matches = $this->matchingEngine->findMatches($requestEntity, $normalizedLimit);
 
-        return array_map(fn (RequestEntity $match) => $this->mapRequest($match, false), $matches);
+        return array_map(
+            fn (array $match) => $this->mapRequest($match['request'], false) + ['similarity' => $match['similarity']],
+            $matches,
+        );
     }
 
     /**

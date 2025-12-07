@@ -6,8 +6,10 @@ namespace App\Service;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Repository\UserEmbeddingRepository;
 use App\Service\Exception\NotFoundException;
 use App\Service\Exception\ValidationException;
+use App\Service\Embedding\EmbeddingClientInterface;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -18,6 +20,8 @@ class UserService
         private readonly EntityManagerInterface $entityManager,
         private readonly UserRepository $userRepository,
         private readonly UserPasswordHasherInterface $passwordHasher,
+        private readonly EmbeddingClientInterface $embeddingClient,
+        private readonly UserEmbeddingRepository $userEmbeddingRepository,
     ) {
     }
 
@@ -72,6 +76,8 @@ class UserService
 
         $this->entityManager->flush();
 
+        $this->syncUserEmbedding($user);
+
         return $this->mapUser($user);
     }
 
@@ -109,5 +115,29 @@ class UserService
             'timezone' => $user->getTimezone(),
             'createdAt' => $user->getCreatedAt()->format(DATE_ATOM),
         ];
+    }
+
+    private function syncUserEmbedding(User $user): void
+    {
+        if ($user->getId() === null) {
+            return;
+        }
+
+        $profileText = implode(' ', array_filter([
+            $user->getDisplayName(),
+            $user->getCity(),
+            $user->getCountry(),
+            $user->getTimezone(),
+            $user->getExternalId(),
+        ]));
+
+        if ($profileText === '') {
+            return;
+        }
+
+        $embedding = $this->embeddingClient->embed($profileText);
+
+        // Maintain user profile embeddings inside the dedicated pgvector table.
+        $this->userEmbeddingRepository->upsert($user->getId(), $embedding);
     }
 }
