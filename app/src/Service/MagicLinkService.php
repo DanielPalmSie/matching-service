@@ -35,7 +35,7 @@ class MagicLinkService
         $loginUrl = sprintf('%s/auth/magic-login/%s', $this->frontendBaseUrl, $magicLoginToken->getToken());
 
         $email = (new Email())
-            ->from('no-reply@matchinghub.work')
+            ->from('palm6991@gmail.com')
             ->to($user->getEmail())
             ->subject('Your login link')
             ->text(sprintf("Use the following link to log in: %s\n\nThis link is valid for 30 minutes.", $loginUrl));
