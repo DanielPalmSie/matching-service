@@ -44,7 +44,7 @@ security:
 
     access_control:
         - { path: ^/api/auth/magic-link/request, roles: PUBLIC_ACCESS }
-        - { path: ^/auth/magic-login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/magic-link/verify, roles: PUBLIC_ACCESS }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/token/refresh, roles: PUBLIC_ACCESS }
