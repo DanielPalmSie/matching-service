@@ -18,7 +18,8 @@ class MagicLoginConsumeController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly JWTTokenManagerInterface $jwtTokenManager,
-    ) {}
+    ) {
+    }
 
     #[Route('/api/auth/magic-link/verify', name: 'auth_magic_login_consume', methods: ['POST'])]
     public function __invoke(Request $request): JsonResponse
