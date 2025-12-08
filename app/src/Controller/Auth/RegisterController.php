@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controller\Auth;
 
+use App\Entity\EmailConfirmationToken;
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Service\RegistrationEmailService;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,6 +24,7 @@ class RegisterController extends AbstractController
         private readonly EntityManagerInterface $entityManager,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly UserRepository $userRepository,
+        private readonly RegistrationEmailService $registrationEmailService,
     ) {
     }
 
@@ -82,9 +86,15 @@ class RegisterController extends AbstractController
         $user->setExternalId($email);
         $user->setRoles(['ROLE_USER']);
         $user->setPassword($this->passwordHasher->hashPassword($user, $password));
+        $user->setIsVerified(false);
+
+        $confirmationToken = new EmailConfirmationToken($user, new DateTimeImmutable('+48 hours'));
 
         $this->entityManager->persist($user);
+        $this->entityManager->persist($confirmationToken);
         $this->entityManager->flush();
+
+        $this->registrationEmailService->sendConfirmationEmail($user, $confirmationToken);
 
         return new JsonResponse(['status' => 'ok'], Response::HTTP_CREATED);
     }

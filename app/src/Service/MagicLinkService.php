@@ -20,6 +20,7 @@ class MagicLinkService
         private readonly EntityManagerInterface $entityManager,
         private readonly MailerInterface $mailer,
         #[Autowire(param: 'app.frontend_base_url')] string $frontendBaseUrl,
+        #[Autowire(param: 'app.mailer_from')] private readonly string $mailerFrom,
     ) {
         $this->frontendBaseUrl = rtrim($frontendBaseUrl !== '' ? $frontendBaseUrl : 'https://matchinghub.work', '/');
     }
@@ -35,7 +36,7 @@ class MagicLinkService
         $loginUrl = sprintf('%s/auth/magic-login/%s', $this->frontendBaseUrl, $magicLoginToken->getToken());
 
         $email = (new Email())
-            ->from('palm6991@gmail.com')
+            ->from($this->mailerFrom)
             ->to($user->getEmail())
             ->subject('Your login link')
             ->text(sprintf("Use the following link to log in: %s\n\nThis link is valid for 30 minutes.", $loginUrl));

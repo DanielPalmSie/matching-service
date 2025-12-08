@@ -58,6 +58,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isVerified = false;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $emailVerifiedAt = null;
+
     /**
      * @var Collection<int, Request>
      */
@@ -229,6 +235,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->createdAt = $createdAt;
 
         return $this;
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->isVerified;
+    }
+
+    public function setIsVerified(bool $isVerified): static
+    {
+        $this->isVerified = $isVerified;
+
+        return $this;
+    }
+
+    public function getEmailVerifiedAt(): ?\DateTimeImmutable
+    {
+        return $this->emailVerifiedAt;
+    }
+
+    public function setEmailVerifiedAt(?\DateTimeImmutable $emailVerifiedAt): static
+    {
+        $this->emailVerifiedAt = $emailVerifiedAt;
+
+        return $this;
+    }
+
+    public function markEmailVerified(): void
+    {
+        $this->isVerified = true;
+        $this->emailVerifiedAt = new \DateTimeImmutable();
     }
 
     /**
