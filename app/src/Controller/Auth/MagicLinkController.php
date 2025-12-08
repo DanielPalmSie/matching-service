@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -54,7 +55,14 @@ class MagicLinkController extends AbstractController
             $this->entityManager->flush();
         }
 
-        $this->magicLinkService->createAndSend($user);
+        try {
+            $this->magicLinkService->createAndSend($user);
+        } catch (TransportExceptionInterface $exception) {
+            return new JsonResponse(
+                ['error' => 'Failed to send magic login link'],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
 
         return new JsonResponse(['status' => 'ok']);
     }
