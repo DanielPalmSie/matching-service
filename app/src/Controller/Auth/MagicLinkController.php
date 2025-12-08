@@ -27,7 +27,7 @@ class MagicLinkController extends AbstractController
     }
 
     #[Route('/api/auth/magic-link/request', name: 'auth_magic_link_request', methods: ['POST'])]
-    public function __invoke(Request $request): JsonResponse
+    public function request(Request $request): JsonResponse
     {
         $payload = json_decode($request->getContent(), true);
         if (!is_array($payload)) {
