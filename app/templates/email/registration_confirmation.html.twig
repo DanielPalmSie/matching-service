@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Confirm your email</title>
+</head>
+<body>
+    <h1>Welcome to Matching Hub!</h1>
+    <p>Hello {{ userEmail }},</p>
+    <p>Thanks for registering. Please confirm your email address to activate your account.</p>
+    <p><a href="{{ confirmationUrl }}" style="display:inline-block;padding:10px 16px;background:#0f766e;color:#ffffff;text-decoration:none;border-radius:4px;">Confirm my email</a></p>
+    <p>If the button above does not work, copy and paste this link into your browser:</p>
+    <p><a href="{{ confirmationUrl }}">{{ confirmationUrl }}</a></p>
+    <p>This link expires on {{ expiresAt|date('F j, Y \a\t H:i T') }}.</p>
+    <p>If you did not create an account, you can ignore this message.</p>
+    <p>— The Matching Hub team</p>
+</body>
+</html>

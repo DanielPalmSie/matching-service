@@ -10,6 +10,7 @@ parameters:
     app.openai.api_key: '%env(OPENAI_API_KEY)%'
     app.openai.embedding_model: '%env(OPENAI_EMBEDDING_MODEL)%'
     app.frontend_base_url: '%env(resolve:FRONTEND_BASE_URL)%'
+    app.mailer_from: '%env(resolve:MAILER_FROM)%'
 
 services:
     # default configuration for services in *this* file
