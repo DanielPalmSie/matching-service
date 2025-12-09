@@ -8,6 +8,7 @@ use App\Entity\MagicLoginToken;
 use App\Entity\User;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
@@ -21,6 +22,7 @@ class MagicLinkService
         private readonly MailerInterface $mailer,
         #[Autowire(param: 'app.frontend_base_url')] string $frontendBaseUrl,
         #[Autowire(param: 'app.mailer_from')] private readonly string $mailerFrom,
+        private readonly LoggerInterface $logger,
     ) {
         $this->frontendBaseUrl = rtrim($frontendBaseUrl !== '' ? $frontendBaseUrl : 'https://matchinghub.work', '/');
     }
@@ -32,6 +34,12 @@ class MagicLinkService
 
         $this->entityManager->persist($magicLoginToken);
         $this->entityManager->flush();
+
+        $this->logger->info('Magic login token created', [
+            'magic_login_token_id' => $magicLoginToken->getId(),
+            'user_id' => $user->getId(),
+            'telegram_chat_id' => $telegramChatId,
+        ]);
 
         $loginUrl = sprintf('%s/auth/magic-login/%s', $this->frontendBaseUrl, $magicLoginToken->getToken());
 
