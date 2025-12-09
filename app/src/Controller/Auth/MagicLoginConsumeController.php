@@ -9,10 +9,12 @@ use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use App\Service\TelegramLoginNotifier;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Throwable;
 
 class MagicLoginConsumeController
 {
@@ -20,6 +22,7 @@ class MagicLoginConsumeController
         private readonly EntityManagerInterface $entityManager,
         private readonly JWTTokenManagerInterface $jwtTokenManager,
         private readonly TelegramLoginNotifier $telegramLoginNotifier,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -42,17 +45,41 @@ class MagicLoginConsumeController
             return new JsonResponse(['error' => 'Invalid or expired link'], Response::HTTP_BAD_REQUEST);
         }
 
+        $this->logger->info('Magic login token consumed', [
+            'magic_login_token_id' => $magicToken->getId(),
+            'user_id' => $magicToken->getUser()->getId(),
+            'telegram_chat_id' => $magicToken->getTelegramChatId(),
+        ]);
+
         $magicToken->setUsedAt(new DateTimeImmutable());
         $this->entityManager->flush();
 
         $jwt = $this->jwtTokenManager->create($magicToken->getUser());
 
         if ($magicToken->getTelegramChatId() !== null) {
-            $this->telegramLoginNotifier->notifyUserLoggedIn(
-                $magicToken->getUser(),
-                $magicToken->getTelegramChatId(),
-                $jwt
-            );
+            try {
+                $this->telegramLoginNotifier->notifyUserLoggedIn(
+                    $magicToken->getUser(),
+                    $magicToken->getTelegramChatId(),
+                    $jwt
+                );
+
+                $this->logger->info('Telegram login notifier dispatched', [
+                    'magic_login_token_id' => $magicToken->getId(),
+                    'chat_id' => $magicToken->getTelegramChatId(),
+                ]);
+            } catch (Throwable $exception) {
+                $this->logger->error('Failed to dispatch Telegram login notifier', [
+                    'exception' => $exception,
+                    'magic_login_token_id' => $magicToken->getId(),
+                    'chat_id' => $magicToken->getTelegramChatId(),
+                ]);
+            }
+        } else {
+            $this->logger->warning('Magic login token used without a telegram chat id', [
+                'magic_login_token_id' => $magicToken->getId(),
+                'user_id' => $magicToken->getUser()->getId(),
+            ]);
         }
 
         return new JsonResponse(['token' => $jwt]);
