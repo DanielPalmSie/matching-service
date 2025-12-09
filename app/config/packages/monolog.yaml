@@ -1,6 +1,7 @@
 monolog:
     channels:
         - deprecation
+        - magic_login
 
 when@dev:
     monolog:
@@ -51,6 +52,12 @@ when@prod:
                 id: Sentry\Monolog\Handler
                 level: error
                 channels: ["!event", "!doctrine", "!deprecation"]
+
+            sentry_magic_login:
+                type: service
+                id: Sentry\Monolog\Handler
+                level: debug
+                channels: ["magic_login"]
 
             deprecation:
                 type: stream
