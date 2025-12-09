@@ -59,8 +59,6 @@ class MagicLoginPageController extends AbstractController
             ]);
         }
 
-        return $this->render('auth/magic_login_success.html.twig', [
-            'jwt' => $jwt,
-        ]);
+        return $this->render('auth/magic_login_success.html.twig');
     }
 }
