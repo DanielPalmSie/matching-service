@@ -8,6 +8,7 @@ use App\Entity\MagicLoginToken;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use App\Service\TelegramLoginNotifier;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,6 +19,7 @@ class MagicLoginConsumeController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly JWTTokenManagerInterface $jwtTokenManager,
+        private readonly TelegramLoginNotifier $telegramLoginNotifier,
     ) {
     }
 
@@ -44,6 +46,14 @@ class MagicLoginConsumeController
         $this->entityManager->flush();
 
         $jwt = $this->jwtTokenManager->create($magicToken->getUser());
+
+        if ($magicToken->getTelegramChatId() !== null) {
+            $this->telegramLoginNotifier->notifyUserLoggedIn(
+                $magicToken->getUser(),
+                $magicToken->getTelegramChatId(),
+                $jwt
+            );
+        }
 
         return new JsonResponse(['token' => $jwt]);
     }
