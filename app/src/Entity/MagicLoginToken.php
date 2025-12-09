@@ -32,13 +32,17 @@ class MagicLoginToken
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $usedAt = null;
 
-    public function __construct(User $user, DateTimeImmutable $expiresAt)
+    #[ORM\Column(type: Types::BIGINT, nullable: true)]
+    private ?string $telegramChatId = null;
+
+    public function __construct(User $user, DateTimeImmutable $expiresAt, int|string|null $telegramChatId = null)
     {
         $this->id = self::generateUuid();
         $this->user = $user;
         $this->expiresAt = $expiresAt;
         $this->token = bin2hex(random_bytes(32));
         $this->createdAt = new DateTimeImmutable();
+        $this->telegramChatId = $telegramChatId !== null ? (string) $telegramChatId : null;
     }
 
     public function getId(): string
@@ -74,6 +78,16 @@ class MagicLoginToken
     public function setUsedAt(DateTimeImmutable $usedAt): void
     {
         $this->usedAt = $usedAt;
+    }
+
+    public function getTelegramChatId(): ?string
+    {
+        return $this->telegramChatId;
+    }
+
+    public function setTelegramChatId(int|string|null $telegramChatId): void
+    {
+        $this->telegramChatId = $telegramChatId !== null ? (string) $telegramChatId : null;
     }
 
     public function isValid(): bool

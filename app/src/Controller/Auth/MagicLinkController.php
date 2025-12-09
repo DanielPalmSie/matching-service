@@ -42,6 +42,19 @@ class MagicLinkController extends AbstractController
         $name = $payload['name'] ?? '';
         $name = is_string($name) ? $name : '';
 
+        $telegramChatId = $payload['telegram_chat_id'] ?? null;
+        if ($telegramChatId !== null) {
+            if (!is_int($telegramChatId) && !is_string($telegramChatId)) {
+                return new JsonResponse(['error' => 'Invalid telegram_chat_id'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $telegramChatId = trim((string) $telegramChatId);
+
+            if ($telegramChatId === '' || !preg_match('/^-?\d+$/', $telegramChatId)) {
+                return new JsonResponse(['error' => 'Invalid telegram_chat_id'], Response::HTTP_BAD_REQUEST);
+            }
+        }
+
         $user = $this->userRepository->findOneBy(['email' => $email]);
         if ($user === null) {
             $user = new User();
@@ -56,7 +69,7 @@ class MagicLinkController extends AbstractController
         }
 
         try {
-            $this->magicLinkService->createAndSend($user);
+            $this->magicLinkService->createAndSend($user, $telegramChatId);
         } catch (TransportExceptionInterface $exception) {
             return new JsonResponse(
                 ['error' => 'Failed to send magic login link'],
