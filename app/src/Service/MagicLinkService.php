@@ -25,7 +25,7 @@ class MagicLinkService
         $this->frontendBaseUrl = rtrim($frontendBaseUrl !== '' ? $frontendBaseUrl : 'https://matchinghub.work', '/');
     }
 
-    public function createAndSend(User $user, int|string|null $telegramChatId = null): void
+    public function createAndSend(User $user, ?int $telegramChatId = null): void
     {
         $expiresAt = new DateTimeImmutable('+30 minutes');
         $magicLoginToken = new MagicLoginToken($user, $expiresAt, $telegramChatId);

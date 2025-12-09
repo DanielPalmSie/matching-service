@@ -53,6 +53,8 @@ class MagicLinkController extends AbstractController
             if ($telegramChatId === '' || !preg_match('/^-?\d+$/', $telegramChatId)) {
                 return new JsonResponse(['error' => 'Invalid telegram_chat_id'], Response::HTTP_BAD_REQUEST);
             }
+
+            $telegramChatId = (int) $telegramChatId;
         }
 
         $user = $this->userRepository->findOneBy(['email' => $email]);
