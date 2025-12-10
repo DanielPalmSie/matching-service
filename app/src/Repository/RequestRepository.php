@@ -64,6 +64,19 @@ class RequestRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    public function findLatestActiveByOwner(User $owner): ?Request
+    {
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.status = :status')
+            ->andWhere('r.owner = :owner')
+            ->setParameter('status', 'active')
+            ->setParameter('owner', $owner)
+            ->orderBy('r.createdAt', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     /**
      * Executes a pgvector-powered similarity search for requests owned by the nearest users.
      *

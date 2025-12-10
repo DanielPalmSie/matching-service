@@ -8,6 +8,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class OpenAIEmbeddingClient implements EmbeddingClientInterface
 {
+    private const EXPECTED_DIMENSIONS = 3072;
+
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly string $openAiApiKey,
@@ -37,6 +39,20 @@ final class OpenAIEmbeddingClient implements EmbeddingClientInterface
             throw new \RuntimeException('Unexpected OpenAI embeddings response structure');
         }
 
-        return array_map('floatval', $data['data'][0]['embedding']);
+        /** @var array<int, float> $embedding */
+        $embedding = array_map('floatval', $data['data'][0]['embedding']);
+
+        $dimensionCount = count($embedding);
+
+        if ($dimensionCount !== self::EXPECTED_DIMENSIONS) {
+            throw new \RuntimeException(sprintf(
+                'Embedding dimension mismatch: expected %d values for model %s but received %d.',
+                self::EXPECTED_DIMENSIONS,
+                $this->openAiEmbeddingModel,
+                $dimensionCount,
+            ));
+        }
+
+        return $embedding;
     }
 }
