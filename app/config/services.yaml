@@ -49,8 +49,7 @@ services:
 
     Elastica\Client:
         arguments:
-            $config:
-                url: 'http://elasticsearch:9200'
+            - { url: 'http://elasticsearch:9200' }
 
     App\Logging\ElasticsearchMonologHandler:
         arguments:
