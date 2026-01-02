@@ -47,12 +47,13 @@ services:
             $level: !php/const Monolog\Logger::ERROR
             $bubble: true
 
-    Elastica\Client:
+    app.elastica_client:
+        class: Elastica\Client
         arguments:
             - { url: 'http://elasticsearch:9200' }
 
     App\Logging\ElasticsearchMonologHandler:
         arguments:
-            $client: '@Elastica\Client'
+            $client: '@app.elastica_client'
             $indexName: 'app-logs-%kernel.environment%'
 
