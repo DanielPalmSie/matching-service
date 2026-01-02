@@ -47,4 +47,14 @@ services:
             $level: !php/const Monolog\Logger::ERROR
             $bubble: true
 
+    Elastica\Client:
+        arguments:
+            $config:
+                host: elasticsearch
+                port: 9200
+
+    App\Logging\ElasticsearchMonologHandler:
+        arguments:
+            $client: '@Elastica\Client'
+            $indexName: 'app-logs-%kernel.environment%'
 

@@ -33,7 +33,13 @@ when@test:
 when@prod:
     monolog:
         handlers:
-            main:
+            elastic:
+                type: service
+                id: App\Logging\ElasticsearchMonologHandler
+                level: info
+                channels: ["!deprecation"]
+
+            stderr:
                 type: stream
                 path: php://stderr
                 level: info
