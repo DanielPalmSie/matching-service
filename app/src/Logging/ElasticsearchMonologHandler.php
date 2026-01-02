@@ -1,101 +1,68 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Logging;
 
-use DateTimeInterface;
 use Elastica\Client;
 use Elastica\Document;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Level;
 use Monolog\LogRecord;
-use Throwable;
 
 final class ElasticsearchMonologHandler extends AbstractProcessingHandler
 {
     public function __construct(
         private readonly Client $client,
         private readonly string $indexName,
-        int|string|Level $level = Level::Info,
-        bool $bubble = true,
+        Level $level = Level::Info,
+        bool $bubble = true
     ) {
         parent::__construct($level, $bubble);
     }
 
-    /**
-     * @param LogRecord|array<string, mixed> $record
-     */
-    protected function write(mixed $record): void
+    protected function write(LogRecord $record): void
     {
         try {
-            $payload = $this->buildPayload($record);
-            $document = new Document(null, $payload);
-            $this->client->getIndex($this->indexName)->addDocument($document);
-        } catch (Throwable) {
-            // Swallow all exceptions to avoid breaking the application.
+            $this->doWrite($record);
+        } catch (\Throwable $e) {
+            // В stderr, без Monolog (иначе цикл)
+            error_log('ELASTIC_HANDLER_FAIL: ' . $e->getMessage());
         }
     }
 
     /**
-     * @param LogRecord|array<string, mixed> $record
-     * @return array<string, mixed>
+     * @throws \Throwable
      */
-    private function buildPayload(mixed $record): array
+    private function doWrite(LogRecord $record): void
     {
-        if ($record instanceof LogRecord) {
-            return [
-                'message' => $record->message,
-                'context' => $this->normalizeContext($record->context),
-                'extra' => $this->normalizeContext($record->extra),
-                'level' => $record->level->value,
-                'level_name' => $record->level->name,
-                'channel' => $record->channel,
-                'datetime' => $this->formatDateTime($record->datetime),
-            ];
+        /** @var array<string, mixed> $data */
+        $data = $record->toArray();
+
+        // 1) datetime -> строка (на всякий случай)
+        if (isset($data['datetime']) && $data['datetime'] instanceof \DateTimeInterface) {
+            $data['datetime'] = $data['datetime']->format(DATE_ATOM);
         }
 
-        $levelName = $record['level_name'] ?? null;
-        $levelValue = $record['level'] ?? null;
+        // 2) context/extra могут содержать объекты -> приводим к JSON-safe
+        $data['context'] = $this->normalizeToJsonSafe($data['context'] ?? []);
+        $data['extra']   = $this->normalizeToJsonSafe($data['extra'] ?? []);
 
-        return [
-            'message' => $record['message'] ?? '',
-            'context' => $this->normalizeContext($record['context'] ?? []),
-            'extra' => $this->normalizeContext($record['extra'] ?? []),
-            'level' => is_numeric($levelValue) ? (int) $levelValue : $levelValue,
-            'level_name' => is_string($levelName) ? $levelName : null,
-            'channel' => $record['channel'] ?? null,
-            'datetime' => $this->formatDateTime($record['datetime'] ?? null),
-        ];
+        $index = $this->client->getIndex($this->indexName);
+        $index->addDocument(new Document(null, $data));
     }
 
-    /**
-     * @param array<string, mixed> $data
-     */
-    private function normalizeContext(array $data): string
+    private function normalizeToJsonSafe(mixed $value): mixed
     {
-        if ($data === []) {
-            return '{}';
+        if ($value === null || is_scalar($value)) {
+            return $value;
         }
 
-        $json = json_encode(
-            $data,
-            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR,
-        );
-
-        return $json === false ? '[unserializable]' : $json;
-    }
-
-    private function formatDateTime(mixed $dateTime): ?string
-    {
-        if ($dateTime instanceof DateTimeInterface) {
-            return $dateTime->format(DateTimeInterface::ATOM);
+        try {
+            return json_encode(
+                $value,
+                JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
+            );
+        } catch (\JsonException) {
+            return '[unserializable]';
         }
-
-        if (is_string($dateTime)) {
-            return $dateTime;
-        }
-
-        return null;
     }
 }
