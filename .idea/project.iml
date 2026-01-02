@@ -134,6 +134,13 @@
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/symfony/psr-http-message-bridge" />
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/symfony/sendgrid-mailer" />
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/firebase/php-jwt" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/elastic/transport" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/elasticsearch/elasticsearch" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/open-telemetry/api" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/open-telemetry/context" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/php-http/httplug" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/php-http/promise" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/ruflin/elastica" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

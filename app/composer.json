@@ -17,6 +17,7 @@
         "nelmio/api-doc-bundle": "^5.8",
         "nyholm/psr7": "^1.8",
         "openai-php/client": "^0.18.0",
+        "ruflin/elastica": "^9.0",
         "sentry/sentry-symfony": "^5.8",
         "symfony/asset": "7.4.*",
         "symfony/console": "7.4.*",

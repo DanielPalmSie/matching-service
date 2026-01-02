@@ -86,7 +86,7 @@ final class ElasticsearchMonologHandler extends AbstractProcessingHandler
         return $json === false ? '[unserializable]' : $json;
     }
 
-    private function formatDateTime(DateTimeInterface|mixed $dateTime): ?string
+    private function formatDateTime(mixed $dateTime): ?string
     {
         if ($dateTime instanceof DateTimeInterface) {
             return $dateTime->format(DateTimeInterface::ATOM);
