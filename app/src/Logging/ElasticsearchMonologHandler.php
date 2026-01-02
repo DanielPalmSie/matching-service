@@ -11,8 +11,8 @@ use Monolog\LogRecord;
 final class ElasticsearchMonologHandler extends AbstractProcessingHandler
 {
     public function __construct(
-        private readonly string $indexName,
         private readonly string $elasticsearchUrl,
+        private readonly string $indexName,
         Level $level = Level::Info,
         bool $bubble = true
     ) {
@@ -43,10 +43,7 @@ final class ElasticsearchMonologHandler extends AbstractProcessingHandler
     private function toJsonString(mixed $value): string
     {
         try {
-            return json_encode(
-                $value,
-                JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
-            );
+            return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
         } catch (\Throwable) {
             return '[unserializable]';
         }

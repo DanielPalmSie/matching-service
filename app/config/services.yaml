@@ -48,7 +48,7 @@ services:
             $bubble: true
 
     App\Logging\ElasticsearchMonologHandler:
+        autowire: false
         arguments:
-            $indexName: 'app-logs-%kernel.environment%'
             $elasticsearchUrl: 'http://elasticsearch:9200'
-
+            $indexName: 'app-logs-%kernel.environment%'
