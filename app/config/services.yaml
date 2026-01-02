@@ -49,8 +49,11 @@ services:
 
     app.elastica_client:
         class: Elastica\Client
+        autowire: false
+        autoconfigure: false
         arguments:
-            - { url: 'http://elasticsearch:9200' }
+            $config:
+                url: 'http://elasticsearch:9200'
 
     App\Logging\ElasticsearchMonologHandler:
         arguments:
