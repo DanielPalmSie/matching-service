@@ -11,8 +11,8 @@ use Monolog\LogRecord;
 final class ElasticsearchMonologHandler extends AbstractProcessingHandler
 {
     public function __construct(
-        private readonly Client $client,
         private readonly string $indexName,
+        private readonly string $elasticsearchUrl,
         Level $level = Level::Info,
         bool $bubble = true
     ) {
@@ -22,46 +22,32 @@ final class ElasticsearchMonologHandler extends AbstractProcessingHandler
     protected function write(LogRecord $record): void
     {
         try {
-            $this->doWrite($record);
+            $data = [
+                'message'    => $record->message,
+                'context'    => $this->toJsonString($record->context),
+                'level'      => $record->level->value,
+                'level_name' => $record->level->getName(),
+                'channel'    => $record->channel,
+                'datetime'   => $record->datetime->format(DATE_ATOM),
+                'extra'      => $this->toJsonString($record->extra),
+            ];
+
+            $client = new Client(['url' => $this->elasticsearchUrl]);
+            $index  = $client->getIndex($this->indexName);
+            $index->addDocument(new Document(null, $data));
         } catch (\Throwable $e) {
-            // В stderr, без Monolog (иначе цикл)
             error_log('ELASTIC_HANDLER_FAIL: ' . $e->getMessage());
         }
     }
 
-    /**
-     * @throws \Throwable
-     */
-    private function doWrite(LogRecord $record): void
+    private function toJsonString(mixed $value): string
     {
-        /** @var array<string, mixed> $data */
-        $data = $record->toArray();
-
-        // 1) datetime -> строка (на всякий случай)
-        if (isset($data['datetime']) && $data['datetime'] instanceof \DateTimeInterface) {
-            $data['datetime'] = $data['datetime']->format(DATE_ATOM);
-        }
-
-        // 2) context/extra могут содержать объекты -> приводим к JSON-safe
-        $data['context'] = $this->normalizeToJsonSafe($data['context'] ?? []);
-        $data['extra']   = $this->normalizeToJsonSafe($data['extra'] ?? []);
-
-        $index = $this->client->getIndex($this->indexName);
-        $index->addDocument(new Document(null, $data));
-    }
-
-    private function normalizeToJsonSafe(mixed $value): mixed
-    {
-        if ($value === null || is_scalar($value)) {
-            return $value;
-        }
-
         try {
             return json_encode(
                 $value,
                 JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
             );
-        } catch (\JsonException) {
+        } catch (\Throwable) {
             return '[unserializable]';
         }
     }
