@@ -50,8 +50,7 @@ services:
     Elastica\Client:
         arguments:
             $config:
-                host: elasticsearch
-                port: 9200
+                url: 'http://elasticsearch:9200'
 
     App\Logging\ElasticsearchMonologHandler:
         arguments:
