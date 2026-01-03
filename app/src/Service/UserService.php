@@ -8,11 +8,9 @@ use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\Exception\NotFoundException;
 use App\Service\Exception\ValidationException;
-use App\Service\UserEmbeddingSynchronizer;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Psr\Log\LoggerInterface;
 
 class UserService
 {
@@ -21,7 +19,6 @@ class UserService
         private readonly UserRepository $userRepository,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly UserEmbeddingSynchronizer $userEmbeddingSynchronizer,
-        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -86,19 +83,8 @@ class UserService
      */
     public function getUserData(int $id): array
     {
-        $this->logger->info('Fetching user data.', [
-            'userId' => $id,
-            'method' => __METHOD__,
-        ]);
-
         $user = $this->userRepository->find($id);
-
         if ($user === null) {
-            $this->logger->error('User not found.', [
-                'userId' => $id,
-                'method' => __METHOD__,
-            ]);
-
             throw new NotFoundException('User not found.');
         }
 
