@@ -10,6 +10,8 @@ use Monolog\LogRecord;
 
 final class ElasticsearchMonologHandler extends AbstractProcessingHandler
 {
+    private Client $client;
+
     public function __construct(
         private readonly string $elasticsearchUrl,
         private readonly string $indexName,
@@ -17,6 +19,12 @@ final class ElasticsearchMonologHandler extends AbstractProcessingHandler
         bool $bubble = true
     ) {
         parent::__construct($level, $bubble);
+
+        $host = preg_replace('#^https?://#', '', rtrim($this->elasticsearchUrl, '/'));
+
+        $this->client = new Client([
+            'hosts' => [$host],
+        ]);
     }
 
     protected function write(LogRecord $record): void
@@ -32,8 +40,7 @@ final class ElasticsearchMonologHandler extends AbstractProcessingHandler
                 'extra'      => $this->toJsonString($record->extra),
             ];
 
-            $client = new Client(['url' => $this->elasticsearchUrl]);
-            $index  = $client->getIndex($this->indexName);
+            $index = $this->client->getIndex($this->indexName);
             $index->addDocument(new Document(null, $data));
         } catch (\Throwable $e) {
             error_log('ELASTIC_HANDLER_FAIL: ' . $e->getMessage());
