@@ -45,5 +45,5 @@ services:
         autowire: false
         autoconfigure: false
         arguments:
-            $elasticsearchUrl: 'http://elasticsearch:9200'
+            $elasticsearchUrl: 'http://matching-elasticsearch:9200'
             $indexName: 'app-logs-%kernel.environment%'
