@@ -49,6 +49,7 @@ services:
 
     App\Logging\ElasticsearchMonologHandler:
         autowire: false
+        autoconfigure: false
         arguments:
             $elasticsearchUrl: 'http://elasticsearch:9200'
             $indexName: 'app-logs-%kernel.environment%'
