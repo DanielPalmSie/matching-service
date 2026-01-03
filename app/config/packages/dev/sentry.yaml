@@ -1,2 +1,0 @@
-sentry:
-    register_error_listener: true
