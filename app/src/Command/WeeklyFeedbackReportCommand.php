@@ -20,6 +20,8 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Doctrine\DBAL\Platforms\MySQLPlatform;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 
 #[AsCommand(name: 'app:weekly-feedback-report', description: 'Generate and email weekly feedback analysis report')]
 class WeeklyFeedbackReportCommand extends Command
@@ -457,15 +459,16 @@ class WeeklyFeedbackReportCommand extends Command
 
     private function acquireLock(string $runId): bool
     {
-        $platform = $this->connection->getDatabasePlatform()->getName();
-        if ($platform === 'postgresql') {
+        $platform = $this->connection->getDatabasePlatform();
+
+        if ($platform instanceof PostgreSQLPlatform) {
             $lockKey = (int) sprintf('%u', crc32(self::LOCK_NAME));
             $result = $this->connection->fetchOne('SELECT pg_try_advisory_lock(:key)', ['key' => $lockKey]);
 
             return (bool) $result;
         }
 
-        if ($platform === 'mysql') {
+        if ($platform instanceof MySQLPlatform) {
             $result = $this->connection->fetchOne('SELECT GET_LOCK(:key, 0)', ['key' => self::LOCK_NAME]);
 
             return (int) $result === 1;
@@ -473,7 +476,7 @@ class WeeklyFeedbackReportCommand extends Command
 
         $this->logger->warning('No supported advisory lock for this database platform.', [
             'run_id' => $runId,
-            'platform' => $platform,
+            'platform_class' => $platform::class,
         ]);
 
         return true;
@@ -481,15 +484,16 @@ class WeeklyFeedbackReportCommand extends Command
 
     private function releaseLock(string $runId): void
     {
-        $platform = $this->connection->getDatabasePlatform()->getName();
-        if ($platform === 'postgresql') {
+        $platform = $this->connection->getDatabasePlatform();
+
+        if ($platform instanceof PostgreSQLPlatform) {
             $lockKey = (int) sprintf('%u', crc32(self::LOCK_NAME));
             $this->connection->executeStatement('SELECT pg_advisory_unlock(:key)', ['key' => $lockKey]);
 
             return;
         }
 
-        if ($platform === 'mysql') {
+        if ($platform instanceof MySQLPlatform) {
             $this->connection->executeStatement('SELECT RELEASE_LOCK(:key)', ['key' => self::LOCK_NAME]);
 
             return;
@@ -497,7 +501,7 @@ class WeeklyFeedbackReportCommand extends Command
 
         $this->logger->warning('Skipping lock release for unsupported database platform.', [
             'run_id' => $runId,
-            'platform' => $platform,
+            'platform_class' => $platform::class,
         ]);
     }
 
