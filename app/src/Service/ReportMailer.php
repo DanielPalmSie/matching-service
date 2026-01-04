@@ -21,15 +21,22 @@ class ReportMailer
     /**
      * @throws TransportExceptionInterface
      */
-    public function sendReport(string $pdfContent): void
+    public function sendReport(string $pdfContent, ?string $recipientOverride = null): void
     {
+        $recipient = $this->resolveRecipient($recipientOverride);
+
         $email = (new Email())
             ->from($this->fromEmail)
-            ->to($this->recipient)
+            ->to($recipient)
             ->subject('Weekly Feedback Report')
             ->text('Attached is the weekly feedback report in PDF format.')
             ->attach($pdfContent, 'weekly-feedback-report.pdf', 'application/pdf');
 
         $this->mailer->send($email);
+    }
+
+    public function resolveRecipient(?string $recipientOverride = null): string
+    {
+        return $recipientOverride ?: $this->recipient;
     }
 }
