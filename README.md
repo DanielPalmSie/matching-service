@@ -97,4 +97,4 @@ php bin/phpunit
 2. Commit your changes with clear messages.
 3. Open a Pull Request describing your updates and testing.
 
-## License 
+## License
