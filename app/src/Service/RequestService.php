@@ -85,7 +85,10 @@ class RequestService
         $matches = $this->matchingEngine->findMatches($requestEntity, $normalizedLimit);
 
         return array_map(
-            fn (array $match) => $this->mapRequest($match['request'], false) + ['similarity' => $match['similarity']],
+            fn (array $match) => $this->mapRequest($match['request'], false) + [
+                'similarity' => $match['similarity'],
+                'rawTextShort' => $this->buildRawTextShort($match['request']->getRawText()),
+            ],
             $matches,
         );
     }
@@ -161,5 +164,15 @@ class RequestService
         }
 
         return $data;
+    }
+
+    private function buildRawTextShort(string $rawText, int $limit = 120): string
+    {
+        $trimmed = trim($rawText);
+        if (mb_strlen($trimmed) <= $limit) {
+            return $trimmed;
+        }
+
+        return mb_substr($trimmed, 0, $limit) . '…';
     }
 }
