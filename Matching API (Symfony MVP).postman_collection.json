@@ -98,6 +98,115 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Request Magic Link",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"name\": \"Test User\",\n  \"telegram_chat_id\": 123456789\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/magic-link/request",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"magic-link",
+								"request"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Magic Link",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"{{magic_login_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/magic-link/verify",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"magic-link",
+								"verify"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Confirm Email",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/confirm-email/{{email_confirmation_token}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"confirm-email",
+								"{{email_confirmation_token}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Magic Login Page",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/magic-login/{{magic_login_token}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"magic-login",
+								"{{magic_login_token}}"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -220,6 +329,159 @@
 			"response": []
 		},
 		{
+			"name": "List My Requests",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/requests/mine?offset=0&limit=20",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"requests",
+						"mine"
+					],
+					"query": [
+						{
+							"key": "offset",
+							"value": "0"
+						},
+						{
+							"key": "limit",
+							"value": "20"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Chats",
+			"item": [
+				{
+					"name": "Start Chat",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chats/{{other_user_id}}/start",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chats",
+								"{{other_user_id}}",
+								"start"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Chats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Chat Messages",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chats/{{chat_id}}/messages?offset=0&limit=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chats",
+								"{{chat_id}}",
+								"messages"
+							],
+							"query": [
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Chat Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Hello there!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chats/{{chat_id}}/messages",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chats",
+								"{{chat_id}}",
+								"messages"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Message Read",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/chats/{{chat_id}}/messages/{{message_id}}/read",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"chats",
+								"{{chat_id}}",
+								"messages",
+								"{{message_id}}",
+								"read"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Register User",
 			"request": {
 				"auth": {
@@ -262,6 +524,24 @@
                                         "path": [
                                                 "api",
                                                 "me"
+                                        ]
+                                }
+                        },
+                        "response": []
+                },
+                {
+                        "name": "Log Test",
+                        "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                        "raw": "{{base_url}}/api/log-test",
+                                        "host": [
+                                                "{{base_url}}"
+                                        ],
+                                        "path": [
+                                                "api",
+                                                "log-test"
                                         ]
                                 }
                         },
@@ -411,6 +691,26 @@
 		{
 			"key": "refresh_token",
 			"value": ""
+		},
+		{
+			"key": "magic_login_token",
+			"value": ""
+		},
+		{
+			"key": "email_confirmation_token",
+			"value": ""
+		},
+		{
+			"key": "other_user_id",
+			"value": "2"
+		},
+		{
+			"key": "chat_id",
+			"value": "1"
+		},
+		{
+			"key": "message_id",
+			"value": "1"
 		}
 	]
 }
