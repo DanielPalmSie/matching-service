@@ -41,6 +41,20 @@ class MagicLoginConsumeController
 
         $magicToken = $this->entityManager->getRepository(MagicLoginToken::class)->findOneBy(['token' => $token]);
 
+        $tokenPrefix = substr($token, 0, 6);
+        $userId = $magicToken instanceof MagicLoginToken ? $magicToken->getUser()->getId() : null;
+        $email = $magicToken instanceof MagicLoginToken ? $magicToken->getUser()->getEmail() : null;
+        $telegramChatId = $magicToken instanceof MagicLoginToken ? $magicToken->getTelegramChatId() : null;
+
+        $this->logger->info('magicLink.consume', [
+            'tokenPrefix' => $tokenPrefix,
+            'userId' => $userId,
+            'email' => $email,
+            'telegramChatId' => $telegramChatId,
+            'ip' => $request->getClientIp(),
+            'userAgent' => $request->headers->get('User-Agent'),
+        ]);
+
         if (!$magicToken instanceof MagicLoginToken || !$magicToken->isValid()) {
             return new JsonResponse(['error' => 'Invalid or expired link'], Response::HTTP_BAD_REQUEST);
         }
