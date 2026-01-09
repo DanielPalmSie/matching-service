@@ -34,10 +34,11 @@ class TelegramLoginNotifier
         }
 
         try {
-            $this->logger->info('Publishing Telegram login event to Mercure', [
+            $this->logger->info('mercure.publish', [
                 'topic' => $topic,
-                'chat_id' => $chatId,
-                'user_id' => $user->getId(),
+                'telegramChatId' => $chatId,
+                'type' => $payload['type'],
+                'hasJwt' => array_key_exists('jwt', $payload),
             ]);
 
             $update = new Update($topic, json_encode($payload, JSON_THROW_ON_ERROR));

@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\MagicLinkService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,6 +24,7 @@ class MagicLinkController extends AbstractController
         private readonly UserRepository $userRepository,
         private readonly EntityManagerInterface $entityManager,
         private readonly UserPasswordHasherInterface $passwordHasher,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -56,6 +58,11 @@ class MagicLinkController extends AbstractController
 
             $telegramChatId = (int) $telegramChatId;
         }
+
+        $this->logger->info('magicLink.request', [
+            'email' => $email,
+            'telegramChatId' => $telegramChatId,
+        ]);
 
         $user = $this->userRepository->findOneBy(['email' => $email]);
         if ($user === null) {

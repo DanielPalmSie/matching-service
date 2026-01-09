@@ -52,6 +52,13 @@ class MagicLoginPageController extends AbstractController
                 'jwt' => $jwt,
             ];
 
+            $this->magicLoginLogger->info('mercure.publish', [
+                'topic' => $topic,
+                'telegramChatId' => (string) $telegramChatId,
+                'type' => $payload['type'],
+                'hasJwt' => array_key_exists('jwt', $payload),
+            ]);
+
             $this->hub->publish(new Update($topic, json_encode($payload, JSON_THROW_ON_ERROR)));
 
             $this->magicLoginLogger->info('Sent Mercure login event for Telegram', [
