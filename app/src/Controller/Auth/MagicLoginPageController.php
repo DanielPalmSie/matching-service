@@ -56,7 +56,7 @@ class MagicLoginPageController extends AbstractController
                 'topic' => $topic,
                 'telegramChatId' => (string) $telegramChatId,
                 'type' => $payload['type'],
-                'hasJwt' => array_key_exists('jwt', $payload),
+                'hasJwt' => true,
             ]);
 
             $this->hub->publish(new Update($topic, json_encode($payload, JSON_THROW_ON_ERROR)));
