@@ -41,7 +41,7 @@ class MagicLoginConsumeController
 
         $magicToken = $this->entityManager->getRepository(MagicLoginToken::class)->findOneBy(['token' => $token]);
 
-        $tokenPrefix = substr($token, 0, 6);
+        $tokenPrefix = substr($token, 0, 8);
         $userId = $magicToken instanceof MagicLoginToken ? $magicToken->getUser()->getId() : null;
         $email = $magicToken instanceof MagicLoginToken ? $magicToken->getUser()->getEmail() : null;
         $telegramChatId = $magicToken instanceof MagicLoginToken ? $magicToken->getTelegramChatId() : null;
@@ -75,7 +75,8 @@ class MagicLoginConsumeController
                 $this->telegramLoginNotifier->notifyUserLoggedIn(
                     $magicToken->getUser(),
                     $magicToken->getTelegramChatId(),
-                    $jwt
+                    $jwt,
+                    $tokenPrefix
                 );
 
                 $this->logger->info('Telegram login notifier dispatched', [
