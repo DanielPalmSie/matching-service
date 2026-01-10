@@ -103,6 +103,12 @@ class RequestRepository extends ServiceEntityRepository
             'query_vector' => ParameterType::STRING,
             'limit' => ParameterType::INTEGER,
         ];
+        $ownerId = $source->getOwner()->getId();
+        if ($ownerId !== null) {
+            $conditions[] = 'r.owner_id != :owner_id';
+            $parameters['owner_id'] = $ownerId;
+            $types['owner_id'] = ParameterType::INTEGER;
+        }
 
         if ($source->getCity() !== null) {
             $conditions[] = 'r.city = :city';

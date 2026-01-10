@@ -14,6 +14,7 @@ use App\Service\Matching\MatchingEngineInterface;
 use App\Repository\UserEmbeddingRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 
 class RequestService
 {
@@ -23,6 +24,7 @@ class RequestService
         private readonly EmbeddingClientInterface $embeddingClient,
         private readonly MatchingEngineInterface $matchingEngine,
         private readonly UserEmbeddingRepository $userEmbeddingRepository,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -83,6 +85,18 @@ class RequestService
 
         $normalizedLimit = $this->normalizeLimit($limit);
         $matches = $this->matchingEngine->findMatches($requestEntity, $normalizedLimit);
+        $matchedOwners = array_map(
+            static fn (array $match): array => [
+                'request_id' => $match['request']->getId(),
+                'owner_id' => $match['request']->getOwner()->getId(),
+            ],
+            $matches,
+        );
+        $this->logger->info('request.matches', [
+            'current_user_id' => $requestEntity->getOwner()->getId(),
+            'source_request_id' => $requestEntity->getId(),
+            'matches' => $matchedOwners,
+        ]);
 
         return array_map(
             fn (array $match) => $this->mapRequest($match['request'], false) + [
