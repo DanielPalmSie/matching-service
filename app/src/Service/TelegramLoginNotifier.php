@@ -17,7 +17,12 @@ class TelegramLoginNotifier
     ) {
     }
 
-    public function notifyUserLoggedIn(User $user, int|string $telegramChatId, ?string $jwt = null): void
+    public function notifyUserLoggedIn(
+        User $user,
+        int|string $telegramChatId,
+        ?string $jwt = null,
+        ?string $tokenPrefix = null
+    ): void
     {
         $chatId = (string) $telegramChatId;
         $topic = sprintf('/tg/login/%s', $chatId);
@@ -34,6 +39,19 @@ class TelegramLoginNotifier
         }
 
         try {
+            $this->logger->info('mercure.publish_diag', [
+                'flow' => 'magic_link',
+                'source' => self::class,
+                'topic' => $topic,
+                'event_type' => $payload['type'],
+                'telegramUserId' => $telegramChatId,
+                'chat_id' => $telegramChatId,
+                'token_prefix' => $tokenPrefix,
+                'user_id' => $user->getId(),
+                'email' => $user->getEmail(),
+                'payload_keys' => array_keys($payload),
+            ]);
+
             $this->logger->info('mercure.publish', [
                 'topic' => $topic,
                 'telegramChatId' => $chatId,

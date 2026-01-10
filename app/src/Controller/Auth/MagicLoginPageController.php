@@ -49,14 +49,29 @@ class MagicLoginPageController extends AbstractController
             $topic = sprintf('/tg/login/%s', (string) $telegramChatId);
             $payload = [
                 'type' => 'login_success',
+                'chat_id' => (string) $telegramChatId,
                 'jwt' => $jwt,
             ];
+            $payloadKeys = array_keys($payload);
 
             $this->magicLoginLogger->info('mercure.publish', [
                 'topic' => $topic,
                 'telegramChatId' => (string) $telegramChatId,
                 'type' => $payload['type'],
                 'hasJwt' => true,
+            ]);
+
+            $this->magicLoginLogger->info('mercure.publish_diag', [
+                'flow' => 'magic_link',
+                'source' => self::class,
+                'topic' => $topic,
+                'event_type' => $payload['type'],
+                'telegramUserId' => $telegramChatId,
+                'chat_id' => $telegramChatId,
+                'token_prefix' => substr($token, 0, 8),
+                'user_id' => $magicToken->getUser()->getId(),
+                'email' => $magicToken->getUser()->getEmail(),
+                'payload_keys' => $payloadKeys,
             ]);
 
             $this->hub->publish(new Update($topic, json_encode($payload, JSON_THROW_ON_ERROR)));
