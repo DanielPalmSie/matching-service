@@ -22,8 +22,7 @@ class TelegramLoginNotifier
         int|string $telegramChatId,
         ?string $jwt = null,
         ?string $tokenPrefix = null
-    ): void
-    {
+    ): void {
         $chatId = (string) $telegramChatId;
         $topic = sprintf('/tg/login/%s', $chatId);
 
