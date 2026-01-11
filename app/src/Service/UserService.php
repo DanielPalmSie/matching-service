@@ -18,7 +18,6 @@ class UserService
         private readonly EntityManagerInterface $entityManager,
         private readonly UserRepository $userRepository,
         private readonly UserPasswordHasherInterface $passwordHasher,
-        private readonly UserEmbeddingSynchronizer $userEmbeddingSynchronizer,
     ) {
     }
 
@@ -72,8 +71,6 @@ class UserService
         }
 
         $this->entityManager->flush();
-
-        $this->userEmbeddingSynchronizer->sync($user);
 
         return $this->mapUser($user);
     }

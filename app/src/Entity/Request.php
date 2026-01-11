@@ -42,6 +42,20 @@ class Request
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
+    #[ORM\Column(type: 'vector', nullable: true, columnDefinition: 'vector(3072)')]
+    private ?array $embedding = null;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $embeddingModel = null;
+
+    #[ORM\Column(length: 16)]
+    private string $embeddingStatus = 'ready';
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $embeddingUpdatedAt = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $embeddingError = null;
 
     public function __construct()
     {
@@ -161,4 +175,69 @@ class Request
         return $this;
     }
 
+    /**
+     * @return array<int, float>|null
+     */
+    public function getEmbedding(): ?array
+    {
+        return $this->embedding;
+    }
+
+    /**
+     * @param array<int, float>|null $embedding
+     */
+    public function setEmbedding(?array $embedding): static
+    {
+        $this->embedding = $embedding;
+
+        return $this;
+    }
+
+    public function getEmbeddingModel(): ?string
+    {
+        return $this->embeddingModel;
+    }
+
+    public function setEmbeddingModel(?string $embeddingModel): static
+    {
+        $this->embeddingModel = $embeddingModel;
+
+        return $this;
+    }
+
+    public function getEmbeddingStatus(): string
+    {
+        return $this->embeddingStatus;
+    }
+
+    public function setEmbeddingStatus(string $embeddingStatus): static
+    {
+        $this->embeddingStatus = $embeddingStatus;
+
+        return $this;
+    }
+
+    public function getEmbeddingUpdatedAt(): ?\DateTimeImmutable
+    {
+        return $this->embeddingUpdatedAt;
+    }
+
+    public function setEmbeddingUpdatedAt(?\DateTimeImmutable $embeddingUpdatedAt): static
+    {
+        $this->embeddingUpdatedAt = $embeddingUpdatedAt;
+
+        return $this;
+    }
+
+    public function getEmbeddingError(): ?string
+    {
+        return $this->embeddingError;
+    }
+
+    public function setEmbeddingError(?string $embeddingError): static
+    {
+        $this->embeddingError = $embeddingError;
+
+        return $this;
+    }
 }
