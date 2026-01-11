@@ -10,7 +10,7 @@ namespace App\Service\Embedding;
 interface EmbeddingClientInterface
 {
     /**
-     * @return Embedding
+     * @return list<float>
      */
     public function embed(string $text): array;
 }

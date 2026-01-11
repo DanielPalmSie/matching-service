@@ -94,7 +94,7 @@ final class BackfillRequestEmbeddingsCommand extends Command
                 }
 
                 try {
-                    /** @var array<int, float> $embedding */
+                    /** @var list<float> $embedding */
                     $embedding = $this->embeddingClient->embed($request->getRawText());
                     if (!$dryRun) {
                         $request->setEmbedding($embedding);

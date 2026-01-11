@@ -42,6 +42,9 @@ class Request
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
+    /**
+     * @var list<float>|null
+     */
     #[ORM\Column(type: 'vector', nullable: true, columnDefinition: 'vector(3072)')]
     private ?array $embedding = null;
 
@@ -176,7 +179,7 @@ class Request
     }
 
     /**
-     * @return array<int, float>|null
+     * @return list<float>|null
      */
     public function getEmbedding(): ?array
     {
@@ -184,12 +187,11 @@ class Request
     }
 
     /**
-     * @param array<int, float>|null $embedding
+     * @param list<float>|null $embedding
      */
     public function setEmbedding(?array $embedding): static
     {
         $this->embedding = $embedding;
-
         return $this;
     }
 

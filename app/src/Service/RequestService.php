@@ -43,8 +43,10 @@ class RequestService
         $embeddingError = null;
         $embeddingUpdatedAt = new DateTimeImmutable();
         try {
-            /** @var array<int, float> $embedding */
-            $embedding = $this->embeddingClient->embed($payload['rawText']);
+            $embeddingRaw = $this->embeddingClient->embed($payload['rawText']);
+
+            /** @var list<float> $embedding */
+            $embedding = array_map('floatval', $embeddingRaw);
         } catch (\Throwable $exception) {
             $embeddingStatus = 'pending';
             $embeddingError = $exception->getMessage();
