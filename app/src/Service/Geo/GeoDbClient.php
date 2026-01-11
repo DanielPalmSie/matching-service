@@ -105,7 +105,9 @@ final class GeoDbClient implements GeoDbClientInterface
         $data = $this->request('cities', [
             'namePrefix' => $query,
             'countryIds' => $countryCode,
+            'types' => 'CITY',
             'limit' => $limit,
+            'sort' => '-population',
         ]);
 
         $items = $data['data'] ?? [];
