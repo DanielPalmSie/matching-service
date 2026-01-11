@@ -7,12 +7,12 @@ namespace App\Service\Geo;
 interface GeoDbClientInterface
 {
     /**
-     * @return array<int, array{code: string, name: string}>
+     * @return array<int, \App\Dto\Geo\CountryDto>
      */
     public function searchCountries(string $q, int $limit = 10): array;
 
     /**
-     * @return array<int, array{id: int, name: string, region: string, countryCode: string, latitude: float, longitude: float}>
+     * @return array<int, \App\Dto\Geo\CityDto>
      */
     public function searchCities(string $q, string $countryCode, int $limit = 10): array;
 }

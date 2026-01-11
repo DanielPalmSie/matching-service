@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service\Geo;
 
+use App\Dto\Geo\CityDto;
+use App\Dto\Geo\CountryDto;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -61,7 +63,7 @@ final class GeoDbClient implements GeoDbClientInterface
     }
 
     /**
-     * @return array<int, array{code: string, name: string}>
+     * @return array<int, CountryDto>
      */
     private function fetchCountries(string $query, int $limit): array
     {
@@ -88,23 +90,21 @@ final class GeoDbClient implements GeoDbClientInterface
                 continue;
             }
 
-            $results[] = [
-                'code' => $code,
-                'name' => $name,
-            ];
+            $results[] = new CountryDto($code, $name);
         }
 
         return $results;
     }
 
     /**
-     * @return array<int, array{id: int, name: string, region: string, countryCode: string, latitude: float, longitude: float}>
+     * @return array<int, CityDto>
      */
     private function fetchCities(string $query, string $countryCode, int $limit): array
     {
         $data = $this->request('cities', [
             'namePrefix' => $query,
             'countryIds' => $countryCode,
+            'types' => 'CITY',
             'limit' => $limit,
         ]);
 
@@ -123,21 +123,21 @@ final class GeoDbClient implements GeoDbClientInterface
             $name = isset($item['name']) ? (string) $item['name'] : '';
             $region = isset($item['region']) ? (string) $item['region'] : (string) ($item['regionName'] ?? '');
             $country = isset($item['countryCode']) ? (string) $item['countryCode'] : '';
-            $latitude = isset($item['latitude']) ? (float) $item['latitude'] : 0.0;
-            $longitude = isset($item['longitude']) ? (float) $item['longitude'] : 0.0;
+            $latitude = isset($item['latitude']) ? (float) $item['latitude'] : null;
+            $longitude = isset($item['longitude']) ? (float) $item['longitude'] : null;
 
             if ($id === 0 || $name === '' || $country === '') {
                 continue;
             }
 
-            $results[] = [
-                'id' => $id,
-                'name' => $name,
-                'region' => $region,
-                'countryCode' => $country,
-                'latitude' => $latitude,
-                'longitude' => $longitude,
-            ];
+            $results[] = new CityDto(
+                $id,
+                $name,
+                $country,
+                $region !== '' ? $region : null,
+                $latitude,
+                $longitude,
+            );
         }
 
         return $results;
