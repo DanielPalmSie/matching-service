@@ -53,6 +53,8 @@ security:
         - { path: ^/api/log-test, roles: PUBLIC_ACCESS }
         - { path: ^/api/docs.json, roles: PUBLIC_ACCESS }
         - { path: ^/api/context.jsonld, roles: PUBLIC_ACCESS }
+        # GeoDB lookup endpoints are public to support bot autocomplete without auth.
+        - { path: ^/api/geo, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:

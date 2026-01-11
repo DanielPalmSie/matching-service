@@ -35,6 +35,13 @@ services:
             $openAiApiKey: '%env(OPENAI_API_KEY)%'
             $openAiEmbeddingModel: '%env(OPENAI_EMBEDDING_MODEL)%'
 
+    App\Service\Geo\GeoDbClientInterface:
+        class: App\Service\Geo\GeoDbClient
+        arguments:
+            $rapidApiKey: '%env(GEODB_RAPIDAPI_KEY)%'
+            $rapidApiHost: '%env(GEODB_RAPIDAPI_HOST)%'
+            $baseUrl: '%env(GEODB_BASE_URL)%'
+
     App\Service\Matching\MatchingEngineInterface:
         class: App\Service\Matching\EmbeddingMatchingEngine
 
