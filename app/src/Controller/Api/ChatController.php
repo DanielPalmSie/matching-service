@@ -4,16 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controller\Api;
 
-use App\Dto\Message\CreateMessageDTO;
-use App\Entity\Chat;
-use App\Entity\Message;
 use App\Entity\User;
-use App\Repository\ChatRepository;
-use App\Repository\MessageRepository;
-use App\Repository\UserRepository;
-use App\Service\Chat\ChatDtoFactory;
-use App\Service\Chat\ChatService;
+use App\Service\Api\ChatApiService;
+use App\Service\Exception\AccessDeniedException;
 use App\Service\Exception\ValidationException;
+use App\Service\Exception\NotFoundException;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -27,11 +22,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class ChatController extends AbstractController
 {
     public function __construct(
-        private readonly ChatService $chatService,
-        private readonly ChatRepository $chatRepository,
-        private readonly MessageRepository $messageRepository,
-        private readonly ChatDtoFactory $chatDtoFactory,
-        private readonly UserRepository $userRepository,
+        private readonly ChatApiService $chatApiService,
     ) {
     }
 
@@ -97,14 +88,13 @@ class ChatController extends AbstractController
             return new JsonResponse(['error' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $otherUser = $this->userRepository->find($userId);
-        if (!$otherUser instanceof User) {
-            return new JsonResponse(['error' => 'User not found.'], Response::HTTP_NOT_FOUND);
+        try {
+            $data = $this->chatApiService->startChat($currentUser, $userId);
+        } catch (NotFoundException $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         }
 
-        $chat = $this->chatService->createOrGetChat($currentUser, $otherUser);
-
-        return new JsonResponse($this->chatDtoFactory->createChatListItem($chat, $currentUser));
+        return new JsonResponse($data);
     }
 
     #[Route('/api/chats', name: 'api_chats_list', methods: ['GET'])]
@@ -162,8 +152,7 @@ class ChatController extends AbstractController
             return new JsonResponse(['error' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $chats = $this->chatRepository->findChatsForUser($currentUser);
-        $items = array_map(fn (Chat $chat) => $this->chatDtoFactory->createChatListItem($chat, $currentUser), $chats);
+        $items = $this->chatApiService->listChats($currentUser);
 
         return new JsonResponse($items);
     }
@@ -210,21 +199,15 @@ class ChatController extends AbstractController
             return new JsonResponse(['error' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $chat = $this->chatRepository->find($chatId);
-        if (!$chat instanceof Chat) {
-            return new JsonResponse(['error' => 'Chat not found.'], Response::HTTP_NOT_FOUND);
+        try {
+            $messages = $this->chatApiService->listMessages($currentUser, $chatId, $request);
+        } catch (NotFoundException $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
+        } catch (AccessDeniedException $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_FORBIDDEN);
         }
 
-        if (!$chat->getParticipants()->contains($currentUser)) {
-            return new JsonResponse(['error' => 'Forbidden.'], Response::HTTP_FORBIDDEN);
-        }
-
-        $offset = max(0, (int) $request->query->get('offset', 0));
-        $limit = max(1, min(200, (int) $request->query->get('limit', 50)));
-
-        $messages = $this->messageRepository->findMessagesForChat($chat, $offset, $limit);
-
-        return new JsonResponse($this->chatDtoFactory->createMessageList($messages));
+        return new JsonResponse($messages);
     }
 
     #[Route('/api/chats/{chatId}/messages', name: 'api_chats_messages_create', methods: ['POST'])]
@@ -275,29 +258,17 @@ class ChatController extends AbstractController
             return new JsonResponse(['error' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $chat = $this->chatRepository->find($chatId);
-        if (!$chat instanceof Chat) {
-            return new JsonResponse(['error' => 'Chat not found.'], Response::HTTP_NOT_FOUND);
-        }
-
-        if (!$chat->getParticipants()->contains($currentUser)) {
-            return new JsonResponse(['error' => 'Forbidden.'], Response::HTTP_FORBIDDEN);
-        }
-
-        $payload = json_decode($request->getContent(), true);
-        if (!is_array($payload) || !isset($payload['content']) || !is_string($payload['content'])) {
-            return new JsonResponse(['error' => 'Invalid payload: content is required.'], Response::HTTP_BAD_REQUEST);
-        }
-
-        $dto = new CreateMessageDTO($payload['content']);
-
         try {
-            $message = $this->chatService->sendMessage($chat, $currentUser, $dto->content);
+            $message = $this->chatApiService->sendMessage($currentUser, $chatId, $request);
         } catch (ValidationException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
+        } catch (NotFoundException $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
+        } catch (AccessDeniedException $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_FORBIDDEN);
         }
 
-        return new JsonResponse($this->chatDtoFactory->createMessageDto($message), Response::HTTP_CREATED);
+        return new JsonResponse($message, Response::HTTP_CREATED);
     }
 
     #[Route('/api/chats/{chatId}/messages/{messageId}/read', name: 'api_chats_messages_read', methods: ['POST'])]
@@ -329,24 +300,14 @@ class ChatController extends AbstractController
             return new JsonResponse(['error' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $chat = $this->chatRepository->find($chatId);
-        if (!$chat instanceof Chat) {
-            return new JsonResponse(['error' => 'Chat not found.'], Response::HTTP_NOT_FOUND);
-        }
-
-        $message = $this->messageRepository->find($messageId);
-        if (!$message instanceof Message || $message->getChat()->getId() !== $chat->getId()) {
-            return new JsonResponse(['error' => 'Message not found.'], Response::HTTP_NOT_FOUND);
-        }
-
-        if (!$chat->getParticipants()->contains($currentUser)) {
-            return new JsonResponse(['error' => 'Forbidden.'], Response::HTTP_FORBIDDEN);
-        }
-
         try {
-            $this->chatService->markMessageAsRead($message, $currentUser);
+            $this->chatApiService->markRead($currentUser, $chatId, $messageId);
         } catch (ValidationException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
+        } catch (NotFoundException $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
+        } catch (AccessDeniedException $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_FORBIDDEN);
         }
 
         return new JsonResponse(['status' => 'ok']);

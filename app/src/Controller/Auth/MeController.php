@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Auth;
 
 use App\Entity\User;
+use App\Service\Auth\MeService;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -13,6 +14,10 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class MeController extends AbstractController
 {
+    public function __construct(private readonly MeService $meService)
+    {
+    }
+
     #[Route('/api/me', name: 'api_me', methods: ['GET'])]
     #[OA\Get(
         path: '/api/me',
@@ -46,10 +51,6 @@ class MeController extends AbstractController
             return new JsonResponse(['error' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
         }
 
-        return new JsonResponse([
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-            'roles' => $user->getRoles(),
-        ]);
+        return new JsonResponse($this->meService->buildResponse($user));
     }
 }
