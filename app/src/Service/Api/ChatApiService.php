@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Api;
 
+use App\Dto\Message\MessageDTO;
 use App\Entity\Chat;
 use App\Entity\Message;
 use App\Entity\User;
@@ -17,6 +18,7 @@ use App\Service\Exception\NotFoundException;
 use App\Service\Exception\ValidationException;
 use App\Service\Http\JsonPayloadDecoder;
 use Symfony\Component\HttpFoundation\Request;
+use App\Dto\Chat\ChatListItemDTO;
 
 class ChatApiService
 {
@@ -31,9 +33,9 @@ class ChatApiService
     }
 
     /**
-     * @return array<string, mixed>
+     * @return ChatListItemDTO
      */
-    public function startChat(User $currentUser, int $userId): array
+    public function startChat(User $currentUser, int $userId): ChatListItemDTO
     {
         $otherUser = $this->userRepository->find($userId);
         if (!$otherUser instanceof User) {
@@ -46,7 +48,7 @@ class ChatApiService
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array<int, ChatListItemDTO>
      */
     public function listChats(User $currentUser): array
     {
@@ -59,7 +61,7 @@ class ChatApiService
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array<int, MessageDTO>
      */
     public function listMessages(User $currentUser, int $chatId, Request $request): array
     {
@@ -73,10 +75,7 @@ class ChatApiService
         return $this->chatDtoFactory->createMessageList($messages);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function sendMessage(User $currentUser, int $chatId, Request $request): array
+    public function sendMessage(User $currentUser, int $chatId, Request $request): MessageDTO
     {
         $chat = $this->findChatForUser($currentUser, $chatId);
 
