@@ -78,7 +78,7 @@ class RequestRepository extends ServiceEntityRepository
     }
 
     /**
-     * Executes a pgvector-powered similarity search for requests owned by the nearest users.
+     * Executes a pgvector-powered similarity search for requests based on stored embeddings.
      *
      * @param array<int, float> $embedding
      *
@@ -88,11 +88,18 @@ class RequestRepository extends ServiceEntityRepository
     {
         $connection = $this->getEntityManager()->getConnection();
 
-        $conditions = ['r.status = :status', 'r.type = :type', 'r.id != :id'];
+        $conditions = [
+            'r.status = :status',
+            'r.type = :type',
+            'r.id != :id',
+            'r.embedding IS NOT NULL',
+            'r.embedding_status = :embedding_status',
+        ];
         $parameters = [
             'status' => 'active',
             'type' => $source->getType(),
             'id' => $source->getId(),
+            'embedding_status' => 'ready',
             'query_vector' => $this->formatVector($embedding),
             'limit' => $limit,
         ];
@@ -100,6 +107,7 @@ class RequestRepository extends ServiceEntityRepository
             'status' => ParameterType::STRING,
             'type' => ParameterType::STRING,
             'id' => ParameterType::INTEGER,
+            'embedding_status' => ParameterType::STRING,
             'query_vector' => ParameterType::STRING,
             'limit' => ParameterType::INTEGER,
         ];
@@ -121,11 +129,10 @@ class RequestRepository extends ServiceEntityRepository
         }
 
         $sql = sprintf(
-            'SELECT r.id, (ue.embedding <-> :query_vector) AS distance
-             FROM user_embeddings ue
-             INNER JOIN request r ON r.owner_id = ue.user_id
+            'SELECT r.id, (r.embedding <=> :query_vector) AS distance
+             FROM request r
              WHERE %s
-             ORDER BY ue.embedding <-> :query_vector
+             ORDER BY r.embedding <=> :query_vector
              LIMIT :limit',
             implode(' AND ', $conditions),
         );
@@ -147,5 +154,29 @@ class RequestRepository extends ServiceEntityRepository
     private function formatVector(array $embedding): string
     {
         return '[' . implode(',', array_map(static fn ($value) => sprintf('%.12f', $value), $embedding)) . ']';
+    }
+
+    /**
+     * @return Request[]
+     */
+    public function findEmbeddingBackfillBatch(int $limit, ?int $afterId, ?int $toId): array
+    {
+        $qb = $this->createQueryBuilder('r')
+            ->andWhere('r.embedding IS NULL OR r.embeddingStatus != :status')
+            ->setParameter('status', 'ready')
+            ->orderBy('r.id', 'ASC')
+            ->setMaxResults($limit);
+
+        if ($afterId !== null) {
+            $qb->andWhere('r.id > :afterId')
+                ->setParameter('afterId', $afterId);
+        }
+
+        if ($toId !== null) {
+            $qb->andWhere('r.id <= :toId')
+                ->setParameter('toId', $toId);
+        }
+
+        return $qb->getQuery()->getResult();
     }
 }

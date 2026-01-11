@@ -11,10 +11,10 @@ use App\Service\Embedding\EmbeddingClientInterface;
 use App\Service\Exception\NotFoundException;
 use App\Service\Exception\ValidationException;
 use App\Service\Matching\MatchingEngineInterface;
-use App\Repository\UserEmbeddingRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class RequestService
 {
@@ -23,7 +23,8 @@ class RequestService
         private readonly RequestRepository $requestRepository,
         private readonly EmbeddingClientInterface $embeddingClient,
         private readonly MatchingEngineInterface $matchingEngine,
-        private readonly UserEmbeddingRepository $userEmbeddingRepository,
+        #[Autowire('%env(OPENAI_EMBEDDING_MODEL)%')]
+        private readonly string $embeddingModel,
         private readonly LoggerInterface $logger,
     ) {
     }
@@ -37,8 +38,21 @@ class RequestService
     {
         $this->assertCreatePayload($payload, $owner);
 
-        /** @var array<int, float> $embedding */
-        $embedding = $this->embeddingClient->embed($payload['rawText']);
+        $embedding = null;
+        $embeddingStatus = 'ready';
+        $embeddingError = null;
+        $embeddingUpdatedAt = new DateTimeImmutable();
+        try {
+            /** @var array<int, float> $embedding */
+            $embedding = $this->embeddingClient->embed($payload['rawText']);
+        } catch (\Throwable $exception) {
+            $embeddingStatus = 'pending';
+            $embeddingError = $exception->getMessage();
+            $this->logger->error('Failed to embed request content.', [
+                'ownerId' => $owner->getId(),
+                'exception' => $exception,
+            ]);
+        }
 
         $requestEntity = new RequestEntity();
         $requestEntity->setOwner($owner);
@@ -48,14 +62,14 @@ class RequestService
         $requestEntity->setCountry($payload['country'] ?? null);
         $requestEntity->setStatus('active');
         $requestEntity->setCreatedAt(new DateTimeImmutable());
+        $requestEntity->setEmbedding($embedding);
+        $requestEntity->setEmbeddingModel($this->embeddingModel);
+        $requestEntity->setEmbeddingStatus($embeddingStatus);
+        $requestEntity->setEmbeddingUpdatedAt($embeddingUpdatedAt);
+        $requestEntity->setEmbeddingError($embeddingError);
 
         $this->entityManager->persist($requestEntity);
         $this->entityManager->flush();
-
-        // Keep the pgvector table in sync so matches can run directly in SQL.
-        if ($owner->getId() !== null) {
-            $this->userEmbeddingRepository->upsert($owner->getId(), $embedding);
-        }
 
         return $this->mapRequest($requestEntity);
     }
@@ -81,6 +95,16 @@ class RequestService
         $requestEntity = $this->requestRepository->find($id);
         if ($requestEntity === null) {
             throw new NotFoundException('Request not found.');
+        }
+
+        if ($requestEntity->getEmbedding() === null || $requestEntity->getEmbeddingStatus() !== 'ready') {
+            $this->logger->warning('request.matches.embedding_missing', [
+                'request_id' => $requestEntity->getId(),
+                'owner_id' => $requestEntity->getOwner()->getId(),
+                'embedding_status' => $requestEntity->getEmbeddingStatus(),
+            ]);
+
+            return [];
         }
 
         $normalizedLimit = $this->normalizeLimit($limit);
