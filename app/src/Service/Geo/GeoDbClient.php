@@ -144,6 +144,7 @@ final class GeoDbClient implements GeoDbClientInterface
     }
 
     /**
+     * @param array<string, scalar> $query
      * @return array<string, mixed>
      */
     private function request(string $path, array $query): array
