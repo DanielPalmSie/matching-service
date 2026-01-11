@@ -39,7 +39,7 @@ class GeoSearchService
     }
 
     /**
-     * @param array<int, array<string, mixed>> $results
+     * @param array<int, mixed> $results
      * @return array<int, array<string, mixed>>
      */
     private function refineCityResults(array $results, string $query, int $limit): array
@@ -74,7 +74,7 @@ class GeoSearchService
     }
 
     /**
-     * @param array<int, array<string, mixed>> $cities
+     * @param array<int, mixed> $cities
      * @return array<int, array<string, mixed>>
      */
     private function deduplicateCities(array $cities, int $limit): array
@@ -87,6 +87,7 @@ class GeoSearchService
                 continue;
             }
 
+            /** @var array<string, mixed> $city */
             $key = $this->buildCityDedupKey($city);
             if ($key === '' || isset($seen[$key])) {
                 continue;
