@@ -7,6 +7,7 @@ namespace App\Controller\Api;
 use App\Entity\User;
 use App\Service\Exception\NotFoundException;
 use App\Service\Exception\ValidationException;
+use App\Service\Api\RequestApiService;
 use App\Service\RequestService;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,8 +18,10 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class RequestController extends AbstractController
 {
-    public function __construct(private readonly RequestService $requestService)
-    {
+    public function __construct(
+        private readonly RequestService $requestService,
+        private readonly RequestApiService $requestApiService,
+    ) {
     }
 
     #[Route('/api/requests', name: 'api_requests_create', methods: ['POST'])]
@@ -79,13 +82,8 @@ class RequestController extends AbstractController
             return new JsonResponse(['error' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $payload = json_decode($request->getContent(), true);
-        if (!is_array($payload)) {
-            return new JsonResponse(['error' => 'Invalid JSON body.'], JsonResponse::HTTP_BAD_REQUEST);
-        }
-
         try {
-            $data = $this->requestService->createRequest($payload, $currentUser);
+            $data = $this->requestApiService->create($request, $currentUser);
         } catch (ValidationException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
         } catch (NotFoundException $exception) {
@@ -193,10 +191,7 @@ class RequestController extends AbstractController
             return new JsonResponse(['error' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $offset = max(0, (int) $request->query->get('offset', 0));
-        $limit = $request->query->has('limit') ? (int) $request->query->get('limit') : null;
-
-        $data = $this->requestService->getRequestsForOwner($currentUser, $offset, $limit);
+        $data = $this->requestApiService->listMine($request, $currentUser);
 
         return new JsonResponse($data);
     }
@@ -248,10 +243,8 @@ class RequestController extends AbstractController
     )]
     public function getMatches(int $id, Request $request): JsonResponse
     {
-        $limit = (int) $request->query->get('limit', 20);
-
         try {
-            $data = $this->requestService->getMatchesData($id, $limit);
+            $data = $this->requestApiService->getMatches($id, $request);
         } catch (NotFoundException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], JsonResponse::HTTP_NOT_FOUND);
         }

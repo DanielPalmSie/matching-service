@@ -6,7 +6,7 @@ namespace App\Controller\Api;
 
 use App\Service\Exception\NotFoundException;
 use App\Service\Exception\ValidationException;
-use App\Service\UserService;
+use App\Service\Api\UserApiService;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,8 +15,9 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class UserController
 {
-    public function __construct(private readonly UserService $userService)
-    {
+    public function __construct(
+        private readonly UserApiService $userApiService,
+    ) {
     }
 
     #[Route('/api/users', name: 'api_users_create', methods: ['POST'])]
@@ -66,13 +67,8 @@ class UserController
     )]
     public function createOrUpdate(Request $request): JsonResponse
     {
-        $payload = json_decode($request->getContent(), true);
-        if (!is_array($payload)) {
-            return new JsonResponse(['error' => 'Invalid payload: externalId is required.'], JsonResponse::HTTP_BAD_REQUEST);
-        }
-
         try {
-            $data = $this->userService->createOrUpdate($payload);
+            $data = $this->userApiService->createOrUpdate($request);
         } catch (ValidationException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
         }
@@ -117,7 +113,7 @@ class UserController
     public function getUser(int $id): JsonResponse
     {
         try {
-            $data = $this->userService->getUserData($id);
+            $data = $this->userApiService->getUser($id);
         } catch (NotFoundException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], JsonResponse::HTTP_NOT_FOUND);
         }
