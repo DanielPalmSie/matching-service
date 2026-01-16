@@ -52,9 +52,9 @@ GET     /api/requests/{id}/matches    RequestController::getMatches
   - `{id}`: integer (explicit `\\d+` requirement for `/api/requests/{id}`, but no regex on `{id}` in `/matches`).
   - Query: `offset` and `limit` for `/mine`; `limit` for `/matches` (default 20, max 100 implied in docs).
 - INPUT
-  - POST `/api/requests`: JSON with required `rawText`, `type`; optional `city`, `country`; legacy `ownerId` must match JWT user if provided.
+  - POST `/api/requests`: JSON with required `rawText`; optional `city`, `country`; legacy `ownerId` must match JWT user if provided.
 - OUTPUT
-  - Create: returns request data (`id`, `ownerId`, `type`, `city`, `country`, `status`, `createdAt`, `rawText`); 400 on validation issues; 404 if owner missing.
+  - Create: returns request data (`id`, `ownerId`, `city`, `country`, `status`, `createdAt`, `rawText`); 400 on validation issues; 404 if owner missing.
   - Get: returns request data or 404.
   - Mine: array of current user’s active requests with the same fields.
   - Matches: array of matched requests with metadata; 404 if base request missing.

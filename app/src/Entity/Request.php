@@ -21,9 +21,6 @@ class Request
     #[ORM\Column(type: Types::TEXT, nullable: false)]
     private string $rawText;
 
-    #[ORM\Column(length: 50)]
-    private string $type;
-
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $city = null;
 
@@ -90,18 +87,6 @@ class Request
     public function setRawText(string $rawText): static
     {
         $this->rawText = $rawText;
-
-        return $this;
-    }
-
-    public function getType(): string
-    {
-        return $this->type;
-    }
-
-    public function setType(string $type): static
-    {
-        $this->type = $type;
 
         return $this;
     }

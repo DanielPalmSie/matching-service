@@ -91,7 +91,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Request'
         '400':
-          description: Validation failed (e.g. missing ownerId/rawText/type).
+          description: Validation failed (e.g. missing ownerId/rawText).
           content:
             application/json:
               schema:
@@ -246,7 +246,7 @@ components:
   schemas:
     RequestPayload:
       type: object
-      required: [ownerId, rawText, type]
+      required: [rawText]
       properties:
         ownerId:
           type: integer
@@ -256,10 +256,6 @@ components:
           type: string
           example: Looking for a software engineer role in Berlin
           description: Full free-text content of the request.
-        type:
-          type: string
-          example: job
-          description: Short type name of the request.
         city:
           type: string
           nullable: true
@@ -279,9 +275,6 @@ components:
         ownerId:
           type: integer
           example: 10
-        type:
-          type: string
-          example: job
         city:
           type: string
           nullable: true
@@ -309,9 +302,6 @@ components:
         ownerId:
           type: integer
           example: 15
-        type:
-          type: string
-          example: job
         city:
           type: string
           nullable: true

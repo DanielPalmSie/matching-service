@@ -27,10 +27,8 @@ class RequestRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('r')
             ->andWhere('r.status = :status')
-            ->andWhere('r.type = :type')
             ->andWhere('r.id != :id')
             ->setParameter('status', 'active')
-            ->setParameter('type', $source->getType())
             ->setParameter('id', $source->getId());
 
         if ($source->getCity() !== null) {
@@ -90,14 +88,12 @@ class RequestRepository extends ServiceEntityRepository
 
         $conditions = [
             'r.status = :status',
-            'r.type = :type',
             'r.id != :id',
             'r.embedding IS NOT NULL',
             'r.embedding_status = :embedding_status',
         ];
         $parameters = [
             'status' => 'active',
-            'type' => $source->getType(),
             'id' => $source->getId(),
             'embedding_status' => 'ready',
             'query_vector' => $this->formatVector($embedding),
@@ -105,7 +101,6 @@ class RequestRepository extends ServiceEntityRepository
         ];
         $types = [
             'status' => ParameterType::STRING,
-            'type' => ParameterType::STRING,
             'id' => ParameterType::INTEGER,
             'embedding_status' => ParameterType::STRING,
             'query_vector' => ParameterType::STRING,
