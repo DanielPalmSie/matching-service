@@ -34,11 +34,10 @@ class RequestController extends AbstractController
             required: true,
             content: new OA\JsonContent(
                 type: 'object',
-                required: ['rawText', 'type'],
+                required: ['rawText'],
                 properties: [
                     new OA\Property(property: 'ownerId', type: 'integer', example: 10, description: 'Deprecated. Owner is derived from the authenticated user and this field must match that value if provided.'),
                     new OA\Property(property: 'rawText', type: 'string', example: 'Looking for a software engineer role in Berlin', description: 'Full free-text content of the request.'),
-                    new OA\Property(property: 'type', type: 'string', example: 'job', description: 'Short type name of the request.'),
                     new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Berlin', description: 'Optional city for geo filtering.'),
                     new OA\Property(property: 'country', type: 'string', nullable: true, example: 'DE', description: 'Optional ISO country code.'),
                 ],
@@ -53,7 +52,6 @@ class RequestController extends AbstractController
                     properties: [
                         new OA\Property(property: 'id', type: 'integer', example: 42),
                         new OA\Property(property: 'ownerId', type: 'integer', example: 10),
-                        new OA\Property(property: 'type', type: 'string', example: 'job'),
                         new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Berlin'),
                         new OA\Property(property: 'country', type: 'string', nullable: true, example: 'DE'),
                         new OA\Property(property: 'status', type: 'string', example: 'active'),
@@ -64,7 +62,7 @@ class RequestController extends AbstractController
             ),
             new OA\Response(
                 response: Response::HTTP_BAD_REQUEST,
-                description: 'Validation failed (e.g. missing rawText/type or mismatched owner).',
+                description: 'Validation failed (e.g. missing rawText or mismatched owner).',
                 content: new OA\JsonContent(properties: [new OA\Property(property: 'error', type: 'string')])
             ),
             new OA\Response(
@@ -116,7 +114,6 @@ class RequestController extends AbstractController
                     properties: [
                         new OA\Property(property: 'id', type: 'integer', example: 42),
                         new OA\Property(property: 'ownerId', type: 'integer', example: 10),
-                        new OA\Property(property: 'type', type: 'string', example: 'job'),
                         new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Berlin'),
                         new OA\Property(property: 'country', type: 'string', nullable: true, example: 'DE'),
                         new OA\Property(property: 'status', type: 'string', example: 'active'),
@@ -165,7 +162,6 @@ class RequestController extends AbstractController
                         properties: [
                             new OA\Property(property: 'id', type: 'integer', example: 42),
                             new OA\Property(property: 'ownerId', type: 'integer', example: 10),
-                            new OA\Property(property: 'type', type: 'string', example: 'job'),
                             new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Berlin'),
                             new OA\Property(property: 'country', type: 'string', nullable: true, example: 'DE'),
                             new OA\Property(property: 'status', type: 'string', example: 'active'),
@@ -223,7 +219,6 @@ class RequestController extends AbstractController
                         properties: [
                             new OA\Property(property: 'id', type: 'integer', example: 84),
                             new OA\Property(property: 'ownerId', type: 'integer', example: 15),
-                            new OA\Property(property: 'type', type: 'string', example: 'job'),
                             new OA\Property(property: 'city', type: 'string', nullable: true, example: 'Berlin'),
                             new OA\Property(property: 'country', type: 'string', nullable: true, example: 'DE'),
                             new OA\Property(property: 'status', type: 'string', example: 'active'),

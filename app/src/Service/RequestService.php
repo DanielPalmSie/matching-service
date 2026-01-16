@@ -59,7 +59,6 @@ class RequestService
         $requestEntity = new RequestEntity();
         $requestEntity->setOwner($owner);
         $requestEntity->setRawText($payload['rawText']);
-        $requestEntity->setType($payload['type']);
         $requestEntity->setCity($payload['city'] ?? null);
         $requestEntity->setCountry($payload['country'] ?? null);
         $requestEntity->setStatus('active');
@@ -151,12 +150,12 @@ class RequestService
      */
     private function assertCreatePayload(array $payload, User $owner): void
     {
-        if (!isset($payload['rawText'], $payload['type']) || !is_string($payload['rawText']) || !is_string($payload['type'])) {
-            throw new ValidationException('rawText and type are required.');
+        if (!isset($payload['rawText']) || !is_string($payload['rawText'])) {
+            throw new ValidationException('rawText is required.');
         }
 
-        if (trim($payload['rawText']) === '' || trim($payload['type']) === '') {
-            throw new ValidationException('rawText and type cannot be empty.');
+        if (trim($payload['rawText']) === '') {
+            throw new ValidationException('rawText cannot be empty.');
         }
 
         if (isset($payload['ownerId'])) {
@@ -192,7 +191,6 @@ class RequestService
         $data = [
             'id' => $requestEntity->getId(),
             'ownerId' => $requestEntity->getOwner()->getId(),
-            'type' => $requestEntity->getType(),
             'city' => $requestEntity->getCity(),
             'country' => $requestEntity->getCountry(),
             'status' => $requestEntity->getStatus(),
