@@ -41,22 +41,27 @@ final class GeoDbClient implements GeoDbClientInterface
         });
     }
 
-    public function searchCities(string $q, string $countryCode, int $limit = 10): array
+    public function searchCities(string $q, string $countryCode, int $limit = 10, int $offset = 0): array
     {
         $query = trim($q);
         $country = strtoupper(trim($countryCode));
 
         if (mb_strlen($query) < 2 || $country === '') {
-            return [];
+            return [
+                'items' => [],
+                'totalCount' => null,
+                'rawCount' => 0,
+            ];
         }
 
         $limit = $this->clampLimit($limit);
-        $cacheKey = $this->buildCitiesCacheKey($country, $query, $limit);
+        $offset = max(0, $offset);
+        $cacheKey = $this->buildCitiesCacheKey($country, $query, $limit, $offset);
 
-        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($query, $country, $limit): array {
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($query, $country, $limit, $offset): array {
             $item->expiresAfter(self::CACHE_TTL_SECONDS);
 
-            return $this->fetchCities($query, $country, $limit);
+            return $this->fetchCities($query, $country, $limit, $offset);
         });
     }
 
@@ -100,19 +105,24 @@ final class GeoDbClient implements GeoDbClientInterface
     /**
      * @return array<int, array{id: int, name: string, region: string, countryCode: string, latitude: float, longitude: float}>
      */
-    private function fetchCities(string $query, string $countryCode, int $limit): array
+    private function fetchCities(string $query, string $countryCode, int $limit, int $offset): array
     {
         $data = $this->request('cities', [
             'namePrefix' => $query,
             'countryIds' => $countryCode,
             'types' => 'CITY',
             'limit' => $limit,
+            'offset' => $offset,
             'sort' => '-population',
         ]);
 
         $items = $data['data'] ?? [];
         if (!is_array($items)) {
-            return [];
+            return [
+                'items' => [],
+                'totalCount' => null,
+                'rawCount' => 0,
+            ];
         }
 
         $results = [];
@@ -142,7 +152,17 @@ final class GeoDbClient implements GeoDbClientInterface
             ];
         }
 
-        return $results;
+        $metadata = $data['metadata'] ?? [];
+        $totalCount = null;
+        if (is_array($metadata) && isset($metadata['totalCount'])) {
+            $totalCount = (int) $metadata['totalCount'];
+        }
+
+        return [
+            'items' => $results,
+            'totalCount' => $totalCount,
+            'rawCount' => count($items),
+        ];
     }
 
     /**
@@ -223,8 +243,8 @@ final class GeoDbClient implements GeoDbClientInterface
         return sprintf('geodb:countries:%s:%d', mb_strtolower($query), $limit);
     }
 
-    private function buildCitiesCacheKey(string $countryCode, string $query, int $limit): string
+    private function buildCitiesCacheKey(string $countryCode, string $query, int $limit, int $offset): string
     {
-        return sprintf('geodb:cities:%s:%s:%d', $countryCode, mb_strtolower($query), $limit);
+        return sprintf('geodb:cities:%s:%s:%d:%d', $countryCode, mb_strtolower($query), $limit, $offset);
     }
 }

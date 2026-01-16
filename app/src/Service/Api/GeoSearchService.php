@@ -25,17 +25,40 @@ class GeoSearchService
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array{items: array<int, array<string, mixed>>, limit: int, offset: int, hasMore: bool}
      */
     public function searchCities(Request $request): array
     {
         $query = (string) $request->query->get('q', '');
         $country = (string) $request->query->get('country', '');
         $limit = (int) $request->query->get('limit', 10);
+        $offset = (int) $request->query->get('offset', 0);
 
-        $results = $this->geoDbClient->searchCities($query, $country, $limit);
+        $limit = $this->clampLimit($limit);
+        $offset = max(0, $offset);
 
-        return $this->refineCityResults($results, $query, $limit);
+        if (mb_strlen(trim($query)) < 2 || trim($country) === '') {
+            return [
+                'items' => [],
+                'limit' => $limit,
+                'offset' => $offset,
+                'hasMore' => false,
+            ];
+        }
+
+        $page = $this->geoDbClient->searchCities($query, $country, $limit, $offset);
+        $rawItems = $page['items'] ?? [];
+        $totalCount = $page['totalCount'] ?? null;
+        $rawCount = isset($page['rawCount']) ? (int) $page['rawCount'] : (is_array($rawItems) ? count($rawItems) : 0);
+
+        $items = $this->refineCityResults(is_array($rawItems) ? $rawItems : [], $query, $limit);
+
+        return [
+            'items' => $items,
+            'limit' => $limit,
+            'offset' => $offset,
+            'hasMore' => $this->hasMore($offset, $limit, $totalCount, $rawCount),
+        ];
     }
 
     /**
@@ -140,5 +163,27 @@ class GeoSearchService
         $normalized = is_string($normalized) ? $normalized : '';
 
         return trim($normalized);
+    }
+
+    private function clampLimit(int $limit): int
+    {
+        if ($limit < 1) {
+            return 1;
+        }
+
+        if ($limit > 10) {
+            return 10;
+        }
+
+        return $limit;
+    }
+
+    private function hasMore(int $offset, int $limit, ?int $totalCount, int $rawCount): bool
+    {
+        if (is_int($totalCount) && $totalCount >= 0) {
+            return ($offset + $limit) < $totalCount;
+        }
+
+        return $rawCount >= $limit;
     }
 }
