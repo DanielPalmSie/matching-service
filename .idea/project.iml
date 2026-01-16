@@ -139,6 +139,7 @@
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/php-http/httplug" />
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/php-http/promise" />
       <excludeFolder url="file://$MODULE_DIR$/app/vendor/ruflin/elastica" />
+      <excludeFolder url="file://$MODULE_DIR$/app/vendor/pgvector/pgvector" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

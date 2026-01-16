@@ -47,11 +47,13 @@ class GeoSearchService
         }
 
         $page = $this->geoDbClient->searchCities($query, $country, $limit, $offset);
-        $rawItems = $page['items'] ?? [];
-        $totalCount = $page['totalCount'] ?? null;
-        $rawCount = isset($page['rawCount']) ? (int) $page['rawCount'] : (is_array($rawItems) ? count($rawItems) : 0);
 
-        $items = $this->refineCityResults(is_array($rawItems) ? $rawItems : [], $query, $limit);
+        /** @var array<int, array<string, mixed>> $rawItems */
+        $rawItems = $page['items'];
+        $totalCount = $page['totalCount'];
+        $rawCount = (int) $page['rawCount'];
+
+        $items = $this->refineCityResults($rawItems, $query, $limit);
 
         return [
             'items' => $items,
@@ -59,6 +61,7 @@ class GeoSearchService
             'offset' => $offset,
             'hasMore' => $this->hasMore($offset, $limit, $totalCount, $rawCount),
         ];
+
     }
 
     /**

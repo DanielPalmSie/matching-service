@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Geo;
 
+use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -24,6 +25,9 @@ final class GeoDbClient implements GeoDbClientInterface
     ) {
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function searchCountries(string $q, int $limit = 10): array
     {
         $query = trim($q);
@@ -41,6 +45,10 @@ final class GeoDbClient implements GeoDbClientInterface
         });
     }
 
+    /**
+     * @return array{items: array<int, array{id:int, name:string, region:string, countryCode:string, latitude:float, longitude:float}>, totalCount: int|null, rawCount: int}
+     * @throws InvalidArgumentException
+     */
     public function searchCities(string $q, string $countryCode, int $limit = 10, int $offset = 0): array
     {
         $query = trim($q);
@@ -103,7 +111,7 @@ final class GeoDbClient implements GeoDbClientInterface
     }
 
     /**
-     * @return array<int, array{id: int, name: string, region: string, countryCode: string, latitude: float, longitude: float}>
+     * @return array{items: array<int, array{id:int, name:string, region:string, countryCode:string, latitude:float, longitude:float}>, totalCount: int|null, rawCount: int}
      */
     private function fetchCities(string $query, string $countryCode, int $limit, int $offset): array
     {
