@@ -36,6 +36,15 @@ class Chat
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updatedAt = null;
 
+    #[ORM\Column(length: 128)]
+    private string $pairKey;
+
+    #[ORM\Column(length: 32, nullable: true)]
+    private ?string $originType = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $originId = null;
+
     public function __construct()
     {
         $this->participants = new ArrayCollection();
@@ -102,5 +111,35 @@ class Chat
     public function setUpdatedAt(?\DateTimeImmutable $updatedAt): void
     {
         $this->updatedAt = $updatedAt;
+    }
+
+    public function getPairKey(): string
+    {
+        return $this->pairKey;
+    }
+
+    public function setPairKey(string $pairKey): void
+    {
+        $this->pairKey = $pairKey;
+    }
+
+    public function getOriginType(): ?string
+    {
+        return $this->originType;
+    }
+
+    public function setOriginType(?string $originType): void
+    {
+        $this->originType = $originType;
+    }
+
+    public function getOriginId(): ?int
+    {
+        return $this->originId;
+    }
+
+    public function setOriginId(?int $originId): void
+    {
+        $this->originId = $originId;
     }
 }

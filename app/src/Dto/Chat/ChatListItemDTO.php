@@ -13,16 +13,27 @@ readonly class ChatListItemDTO
 {
     /**
      * @param array<int, ChatParticipantDTO> $participants
+     * @param array{type: string, id: int}|null $context
      */
     public function __construct(
         public int $id,
         public array $participants,
         public ?MessageDTO $lastMessage,
-        public int $unreadCount = 0,
+        public int $unreadCount,
+        public string $title,
+        public ?string $subtitle,
+        public ?array $context,
     ) {
     }
 
-    public static function fromChat(Chat $chat, ?Message $lastMessage, int $unreadCount = 0): self
+    public static function fromChat(
+        Chat $chat,
+        ?Message $lastMessage,
+        int $unreadCount,
+        string $title,
+        ?string $subtitle,
+        ?array $context,
+    ): self
     {
         $participants = array_map(
             static fn (User $user) => new ChatParticipantDTO($user->getId(), $user->getDisplayName()),
@@ -34,6 +45,9 @@ readonly class ChatListItemDTO
             $participants,
             $lastMessage !== null ? MessageDTO::fromEntity($lastMessage) : null,
             $unreadCount,
+            $title,
+            $subtitle,
+            $context,
         );
     }
 }
