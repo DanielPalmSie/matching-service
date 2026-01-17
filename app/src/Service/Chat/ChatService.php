@@ -23,22 +23,40 @@ class ChatService
     ) {
     }
 
-    public function createOrGetChat(User $userA, User $userB, ?string $originType = null, ?int $originId = null): Chat
+    public function createOrGetChat(
+        User $userA,
+        User $userB,
+        ?string $originType = null,
+        ?int $originId = null,
+        ?string $contextTitle = null,
+        ?string $contextSubtitle = null,
+        ?string $contextSource = null,
+    ): Chat
     {
         if (($originType === null) !== ($originId === null)) {
             throw new ValidationException('Origin type and id must be provided together.');
         }
+
+        $normalizedContextTitle = $this->normalizeContextValue($contextTitle, 255);
+        $normalizedContextSubtitle = $this->normalizeContextValue($contextSubtitle, 255);
+        $normalizedContextSource = $this->normalizeContextValue($contextSource, 32);
 
         $pairKey = $this->buildPairKey($userA, $userB);
 
         if ($originType !== null && $originId !== null) {
             $existing = $this->chatRepository->findChatByPairKeyAndOrigin($pairKey, $originType, $originId);
             if ($existing !== null) {
+                if ($this->applyContext($existing, $normalizedContextTitle, $normalizedContextSubtitle, $normalizedContextSource)) {
+                    $this->entityManager->flush();
+                }
                 return $existing;
             }
         } else {
             $existing = $this->chatRepository->findExistingChatBetweenUsers($userA, $userB);
             if ($existing !== null) {
+                if ($this->applyContext($existing, $normalizedContextTitle, $normalizedContextSubtitle, $normalizedContextSource)) {
+                    $this->entityManager->flush();
+                }
                 return $existing;
             }
         }
@@ -47,6 +65,7 @@ class ChatService
         $chat->setPairKey($pairKey);
         $chat->setOriginType($originType);
         $chat->setOriginId($originId);
+        $this->applyContext($chat, $normalizedContextTitle, $normalizedContextSubtitle, $normalizedContextSource);
         $chat->addParticipant($userA);
         $chat->addParticipant($userB);
 
@@ -139,5 +158,50 @@ class ChatService
         $maxId = max($userAId, $userBId);
 
         return sprintf('%d:%d', $minId, $maxId);
+    }
+
+    private function applyContext(
+        Chat $chat,
+        ?string $contextTitle,
+        ?string $contextSubtitle,
+        ?string $contextSource,
+    ): bool
+    {
+        $updated = false;
+
+        if ($contextTitle !== null && $chat->getContextTitle() === null) {
+            $chat->setContextTitle($contextTitle);
+            $updated = true;
+        }
+
+        if ($contextSubtitle !== null && $chat->getContextSubtitle() === null) {
+            $chat->setContextSubtitle($contextSubtitle);
+            $updated = true;
+        }
+
+        if ($contextSource !== null && $chat->getContextSource() === null) {
+            $chat->setContextSource($contextSource);
+            $updated = true;
+        }
+
+        return $updated;
+    }
+
+    private function normalizeContextValue(?string $value, int $maxLength): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = trim($value);
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (mb_strlen($normalized) > $maxLength) {
+            $normalized = mb_substr($normalized, 0, $maxLength);
+        }
+
+        return $normalized;
     }
 }

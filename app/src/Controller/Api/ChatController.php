@@ -50,6 +50,8 @@ class ChatController extends AbstractController
                 properties: [
                     new OA\Property(property: 'originType', type: 'string', example: 'request'),
                     new OA\Property(property: 'originId', type: 'integer', example: 123),
+                    new OA\Property(property: 'contextTitle', type: 'string', nullable: true, example: 'I just arrived in Tokyo…'),
+                    new OA\Property(property: 'contextSubtitle', type: 'string', nullable: true, example: 'Tokyo, JP'),
                 ],
             ),
         ),
@@ -115,6 +117,8 @@ class ChatController extends AbstractController
         try {
             $originType = null;
             $originId = null;
+            $contextTitle = null;
+            $contextSubtitle = null;
             $rawContent = trim((string) $request->getContent());
 
             if ($rawContent !== '') {
@@ -140,9 +144,30 @@ class ChatController extends AbstractController
                 if ($originType === null && $originId !== null) {
                     throw new ValidationException('Invalid payload: originType is required when originId is provided.');
                 }
+
+                if (array_key_exists('contextTitle', $payload)) {
+                    if (!is_string($payload['contextTitle'])) {
+                        throw new ValidationException('Invalid payload: contextTitle must be a string.');
+                    }
+                    $contextTitle = $this->normalizeContextValue($payload['contextTitle'], 255);
+                }
+
+                if (array_key_exists('contextSubtitle', $payload)) {
+                    if (!is_string($payload['contextSubtitle'])) {
+                        throw new ValidationException('Invalid payload: contextSubtitle must be a string.');
+                    }
+                    $contextSubtitle = $this->normalizeContextValue($payload['contextSubtitle'], 255);
+                }
             }
 
-            $data = $this->chatApiService->startChat($currentUser, $userId, $originType, $originId);
+            $data = $this->chatApiService->startChat(
+                $currentUser,
+                $userId,
+                $originType,
+                $originId,
+                $contextTitle,
+                $contextSubtitle,
+            );
         } catch (NotFoundException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (ValidationException $exception) {
@@ -150,6 +175,20 @@ class ChatController extends AbstractController
         }
 
         return new JsonResponse($data);
+    }
+
+    private function normalizeContextValue(string $value, int $maxLength): ?string
+    {
+        $normalized = trim($value);
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (mb_strlen($normalized) > $maxLength) {
+            $normalized = mb_substr($normalized, 0, $maxLength);
+        }
+
+        return $normalized;
     }
 
     #[Route('/api/chats', name: 'api_chats_list', methods: ['GET'])]

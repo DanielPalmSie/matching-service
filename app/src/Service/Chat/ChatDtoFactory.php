@@ -47,31 +47,32 @@ class ChatDtoFactory
      */
     private function resolveChatContext(Chat $chat, ?User $currentUser, ?Request $originRequest): array
     {
+        $contextTitle = $chat->getContextTitle();
+        $contextSubtitle = $chat->getContextSubtitle();
+        $fallbackTitle = $this->resolveParticipantTitle($chat, $currentUser);
+        $requestTitle = null;
+        $requestSubtitle = null;
+        $context = null;
+
         if ($chat->getOriginType() === 'request') {
             $request = $originRequest;
-            $title = $request instanceof Request
+            $requestTitle = $request instanceof Request
                 ? $this->truncateTitle($request->getRawText())
-                : $this->resolveParticipantTitle($chat, $currentUser);
+                : $fallbackTitle;
 
-            $subtitle = $request instanceof Request
+            $requestSubtitle = $request instanceof Request
                 ? $this->formatLocation($request->getCity(), $request->getCountry())
                 : null;
 
             $context = $chat->getOriginId() !== null
                 ? ['type' => 'request', 'id' => $chat->getOriginId()]
                 : null;
-
-            return [
-                $title,
-                $subtitle,
-                $context,
-            ];
         }
 
         return [
-            $this->resolveParticipantTitle($chat, $currentUser),
-            null,
-            null,
+            $contextTitle ?? $requestTitle ?? $fallbackTitle,
+            $contextSubtitle ?? $requestSubtitle,
+            $context,
         ];
     }
 
