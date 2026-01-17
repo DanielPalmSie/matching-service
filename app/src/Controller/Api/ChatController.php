@@ -9,6 +9,7 @@ use App\Service\Api\ChatApiService;
 use App\Service\Exception\AccessDeniedException;
 use App\Service\Exception\ValidationException;
 use App\Service\Exception\NotFoundException;
+use App\Service\Http\JsonPayloadDecoder;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,6 +24,7 @@ class ChatController extends AbstractController
 {
     public function __construct(
         private readonly ChatApiService $chatApiService,
+        private readonly JsonPayloadDecoder $payloadDecoder,
     ) {
     }
 
@@ -41,6 +43,16 @@ class ChatController extends AbstractController
                 description: 'Identifier of the other participant.'
             ),
         ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(property: 'originType', type: 'string', example: 'request'),
+                    new OA\Property(property: 'originId', type: 'integer', example: 123),
+                ],
+            ),
+        ),
         responses: [
             new OA\Response(
                 response: Response::HTTP_OK,
@@ -74,14 +86,26 @@ class ChatController extends AbstractController
                             ],
                         ),
                         new OA\Property(property: 'unreadCount', type: 'integer', example: 3, description: 'Unread messages for the current user'),
+                        new OA\Property(property: 'title', type: 'string', example: 'Need help moving a sofa…'),
+                        new OA\Property(property: 'subtitle', type: 'string', nullable: true, example: 'Berlin, DE'),
+                        new OA\Property(
+                            property: 'context',
+                            type: 'object',
+                            nullable: true,
+                            properties: [
+                                new OA\Property(property: 'type', type: 'string', example: 'request'),
+                                new OA\Property(property: 'id', type: 'integer', example: 123),
+                            ],
+                        ),
                     ],
                 ),
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'User not authenticated.'),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Other participant not found.'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Invalid origin payload.'),
         ],
     )]
-    public function startChat(int $userId): JsonResponse
+    public function startChat(int $userId, Request $request): JsonResponse
     {
         $currentUser = $this->requireAuthenticatedUser();
         if ($currentUser === null) {
@@ -89,9 +113,40 @@ class ChatController extends AbstractController
         }
 
         try {
-            $data = $this->chatApiService->startChat($currentUser, $userId);
+            $originType = null;
+            $originId = null;
+            $rawContent = trim((string) $request->getContent());
+
+            if ($rawContent !== '') {
+                $payload = $this->payloadDecoder->decode($request, 'Invalid payload: originType or originId is required.');
+                if (array_key_exists('originType', $payload)) {
+                    if (!is_string($payload['originType']) || $payload['originType'] !== 'request') {
+                        throw new ValidationException('Invalid payload: originType must be "request".');
+                    }
+                    $originType = $payload['originType'];
+                }
+
+                if (array_key_exists('originId', $payload)) {
+                    if (!is_int($payload['originId']) || $payload['originId'] <= 0) {
+                        throw new ValidationException('Invalid payload: originId must be a positive integer.');
+                    }
+                    $originId = $payload['originId'];
+                }
+
+                if ($originType !== null && $originId === null) {
+                    throw new ValidationException('Invalid payload: originId is required when originType is provided.');
+                }
+
+                if ($originType === null && $originId !== null) {
+                    throw new ValidationException('Invalid payload: originType is required when originId is provided.');
+                }
+            }
+
+            $data = $this->chatApiService->startChat($currentUser, $userId, $originType, $originId);
         } catch (NotFoundException $exception) {
             return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
+        } catch (ValidationException $exception) {
+            return new JsonResponse(['error' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
         }
 
         return new JsonResponse($data);
@@ -138,6 +193,17 @@ class ChatController extends AbstractController
                                 ],
                             ),
                             new OA\Property(property: 'unreadCount', type: 'integer', example: 3, description: 'Unread messages for the current user'),
+                            new OA\Property(property: 'title', type: 'string', example: 'Need help moving a sofa…'),
+                            new OA\Property(property: 'subtitle', type: 'string', nullable: true, example: 'Berlin, DE'),
+                            new OA\Property(
+                                property: 'context',
+                                type: 'object',
+                                nullable: true,
+                                properties: [
+                                    new OA\Property(property: 'type', type: 'string', example: 'request'),
+                                    new OA\Property(property: 'id', type: 'integer', example: 123),
+                                ],
+                            ),
                         ],
                     ),
                 ),

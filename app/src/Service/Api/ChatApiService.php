@@ -10,6 +10,7 @@ use App\Entity\Message;
 use App\Entity\User;
 use App\Repository\ChatRepository;
 use App\Repository\MessageRepository;
+use App\Repository\RequestRepository;
 use App\Repository\UserRepository;
 use App\Service\Chat\ChatDtoFactory;
 use App\Service\Chat\ChatService;
@@ -28,6 +29,7 @@ class ChatApiService
         private readonly MessageRepository $messageRepository,
         private readonly ChatDtoFactory $chatDtoFactory,
         private readonly UserRepository $userRepository,
+        private readonly RequestRepository $requestRepository,
         private readonly JsonPayloadDecoder $payloadDecoder,
     ) {
     }
@@ -35,16 +37,20 @@ class ChatApiService
     /**
      * @return ChatListItemDTO
      */
-    public function startChat(User $currentUser, int $userId): ChatListItemDTO
+    public function startChat(User $currentUser, int $userId, ?string $originType = null, ?int $originId = null): ChatListItemDTO
     {
         $otherUser = $this->userRepository->find($userId);
         if (!$otherUser instanceof User) {
             throw new NotFoundException('User not found.');
         }
 
-        $chat = $this->chatService->createOrGetChat($currentUser, $otherUser);
+        $chat = $this->chatService->createOrGetChat($currentUser, $otherUser, $originType, $originId);
+        $originRequest = null;
+        if ($originType === 'request' && $originId !== null) {
+            $originRequest = $this->requestRepository->find($originId);
+        }
 
-        return $this->chatDtoFactory->createChatListItem($chat, $currentUser);
+        return $this->chatDtoFactory->createChatListItem($chat, $currentUser, $originRequest);
     }
 
     /**
@@ -55,7 +61,11 @@ class ChatApiService
         $chats = $this->chatRepository->findChatsForUser($currentUser);
 
         return array_map(
-            fn (Chat $chat) => $this->chatDtoFactory->createChatListItem($chat, $currentUser),
+            fn (array $row) => $this->chatDtoFactory->createChatListItem(
+                $row['chat'],
+                $currentUser,
+                $row['originRequest'] ?? null
+            ),
             $chats
         );
     }

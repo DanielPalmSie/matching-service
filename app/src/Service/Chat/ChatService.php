@@ -23,14 +23,30 @@ class ChatService
     ) {
     }
 
-    public function createOrGetChat(User $userA, User $userB): Chat
+    public function createOrGetChat(User $userA, User $userB, ?string $originType = null, ?int $originId = null): Chat
     {
-        $existing = $this->chatRepository->findExistingChatBetweenUsers($userA, $userB);
-        if ($existing !== null) {
-            return $existing;
+        if (($originType === null) !== ($originId === null)) {
+            throw new ValidationException('Origin type and id must be provided together.');
+        }
+
+        $pairKey = $this->buildPairKey($userA, $userB);
+
+        if ($originType !== null && $originId !== null) {
+            $existing = $this->chatRepository->findChatByPairKeyAndOrigin($pairKey, $originType, $originId);
+            if ($existing !== null) {
+                return $existing;
+            }
+        } else {
+            $existing = $this->chatRepository->findExistingChatBetweenUsers($userA, $userB);
+            if ($existing !== null) {
+                return $existing;
+            }
         }
 
         $chat = new Chat();
+        $chat->setPairKey($pairKey);
+        $chat->setOriginType($originType);
+        $chat->setOriginId($originId);
         $chat->addParticipant($userA);
         $chat->addParticipant($userB);
 
@@ -109,5 +125,19 @@ class ChatService
         if (!$chat->getParticipants()->contains($user)) {
             throw new ValidationException('User is not a participant of the chat.');
         }
+    }
+
+    private function buildPairKey(User $userA, User $userB): string
+    {
+        $userAId = $userA->getId();
+        $userBId = $userB->getId();
+        if ($userAId === null || $userBId === null) {
+            throw new ValidationException('Users must be persisted before starting a chat.');
+        }
+
+        $minId = min($userAId, $userBId);
+        $maxId = max($userAId, $userBId);
+
+        return sprintf('%d:%d', $minId, $maxId);
     }
 }
