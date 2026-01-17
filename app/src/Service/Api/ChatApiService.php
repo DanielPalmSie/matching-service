@@ -44,8 +44,7 @@ class ChatApiService
         ?int $originId = null,
         ?string $contextTitle = null,
         ?string $contextSubtitle = null,
-    ): ChatListItemDTO
-    {
+    ): ChatListItemDTO {
         $otherUser = $this->userRepository->find($userId);
         if (!$otherUser instanceof User) {
             throw new NotFoundException('User not found.');

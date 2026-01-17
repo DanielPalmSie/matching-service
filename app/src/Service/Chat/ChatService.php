@@ -31,8 +31,7 @@ class ChatService
         ?string $contextTitle = null,
         ?string $contextSubtitle = null,
         ?string $contextSource = null,
-    ): Chat
-    {
+    ): Chat {
         if (($originType === null) !== ($originId === null)) {
             throw new ValidationException('Origin type and id must be provided together.');
         }
@@ -165,8 +164,7 @@ class ChatService
         ?string $contextTitle,
         ?string $contextSubtitle,
         ?string $contextSource,
-    ): bool
-    {
+    ): bool {
         $updated = false;
 
         if ($contextTitle !== null && $chat->getContextTitle() === null) {
