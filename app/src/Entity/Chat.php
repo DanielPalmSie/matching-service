@@ -45,6 +45,15 @@ class Chat
     #[ORM\Column(nullable: true)]
     private ?int $originId = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $contextTitle = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $contextSubtitle = null;
+
+    #[ORM\Column(length: 32, nullable: true)]
+    private ?string $contextSource = null;
+
     public function __construct()
     {
         $this->participants = new ArrayCollection();
@@ -141,5 +150,35 @@ class Chat
     public function setOriginId(?int $originId): void
     {
         $this->originId = $originId;
+    }
+
+    public function getContextTitle(): ?string
+    {
+        return $this->contextTitle;
+    }
+
+    public function setContextTitle(?string $contextTitle): void
+    {
+        $this->contextTitle = $contextTitle;
+    }
+
+    public function getContextSubtitle(): ?string
+    {
+        return $this->contextSubtitle;
+    }
+
+    public function setContextSubtitle(?string $contextSubtitle): void
+    {
+        $this->contextSubtitle = $contextSubtitle;
+    }
+
+    public function getContextSource(): ?string
+    {
+        return $this->contextSource;
+    }
+
+    public function setContextSource(?string $contextSource): void
+    {
+        $this->contextSource = $contextSource;
     }
 }

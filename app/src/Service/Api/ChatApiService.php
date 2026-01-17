@@ -37,14 +37,28 @@ class ChatApiService
     /**
      * @return ChatListItemDTO
      */
-    public function startChat(User $currentUser, int $userId, ?string $originType = null, ?int $originId = null): ChatListItemDTO
+    public function startChat(
+        User $currentUser,
+        int $userId,
+        ?string $originType = null,
+        ?int $originId = null,
+        ?string $contextTitle = null,
+        ?string $contextSubtitle = null,
+    ): ChatListItemDTO
     {
         $otherUser = $this->userRepository->find($userId);
         if (!$otherUser instanceof User) {
             throw new NotFoundException('User not found.');
         }
 
-        $chat = $this->chatService->createOrGetChat($currentUser, $otherUser, $originType, $originId);
+        $chat = $this->chatService->createOrGetChat(
+            $currentUser,
+            $otherUser,
+            $originType,
+            $originId,
+            $contextTitle,
+            $contextSubtitle,
+        );
         $originRequest = null;
         if ($originType === 'request' && $originId !== null) {
             $originRequest = $this->requestRepository->find($originId);
