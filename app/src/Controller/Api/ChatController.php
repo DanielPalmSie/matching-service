@@ -146,17 +146,21 @@ class ChatController extends AbstractController
                 }
 
                 if (array_key_exists('contextTitle', $payload)) {
-                    if (!is_string($payload['contextTitle'])) {
+                    if ($payload['contextTitle'] !== null && !is_string($payload['contextTitle'])) {
                         throw new ValidationException('Invalid payload: contextTitle must be a string.');
                     }
-                    $contextTitle = $this->normalizeContextValue($payload['contextTitle'], 255);
+                    if (is_string($payload['contextTitle'])) {
+                        $contextTitle = $this->normalizeContextValue($payload['contextTitle'], 255);
+                    }
                 }
 
                 if (array_key_exists('contextSubtitle', $payload)) {
-                    if (!is_string($payload['contextSubtitle'])) {
+                    if ($payload['contextSubtitle'] !== null && !is_string($payload['contextSubtitle'])) {
                         throw new ValidationException('Invalid payload: contextSubtitle must be a string.');
                     }
-                    $contextSubtitle = $this->normalizeContextValue($payload['contextSubtitle'], 255);
+                    if (is_string($payload['contextSubtitle'])) {
+                        $contextSubtitle = $this->normalizeContextValue($payload['contextSubtitle'], 255);
+                    }
                 }
             }
 
