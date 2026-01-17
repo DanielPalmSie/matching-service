@@ -26,6 +26,9 @@ readonly class ChatListItemDTO
     ) {
     }
 
+    /**
+     * @param array{type: string, id: int}|null $context
+     */
     public static function fromChat(
         Chat $chat,
         ?Message $lastMessage,
@@ -33,8 +36,7 @@ readonly class ChatListItemDTO
         string $title,
         ?string $subtitle,
         ?array $context,
-    ): self
-    {
+    ): self {
         $participants = array_map(
             static fn (User $user) => new ChatParticipantDTO($user->getId(), $user->getDisplayName()),
             $chat->getParticipants()->toArray(),
