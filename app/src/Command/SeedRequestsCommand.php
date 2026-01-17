@@ -176,16 +176,14 @@ final class SeedRequestsCommand extends Command
 
         $io->success(sprintf('Created %d requests.', $count));
 
-        if ($samples !== []) {
-            $io->writeln('Sample requests (id/ownerId/city):');
-            foreach ($samples as $sample) {
-                $io->writeln(sprintf(
-                    '- %d/%d/%s',
-                    $sample->getId(),
-                    $sample->getOwner()->getId(),
-                    $sample->getCity() ?? '-'
-                ));
-            }
+        $io->writeln('Sample requests (id/ownerId/city):');
+        foreach ($samples as $sample) {
+            $io->writeln(sprintf(
+                '- %d/%d/%s',
+                $sample->getId(),
+                $sample->getOwner()->getId(),
+                $sample->getCity() ?? '-'
+            ));
         }
 
         return Command::SUCCESS;
