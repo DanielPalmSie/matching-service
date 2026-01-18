@@ -13,6 +13,8 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
+use App\Entity\TelegramIdentity;
+use App\Repository\TelegramIdentityRepository;
 
 class MagicLoginPageService
 {
@@ -21,6 +23,7 @@ class MagicLoginPageService
         private readonly EntityManagerInterface $entityManager,
         private readonly JWTTokenManagerInterface $jwtTokenManager,
         private readonly HubInterface $hub,
+        private readonly TelegramIdentityRepository $telegramIdentityRepository,
         #[Autowire(service: 'monolog.logger.magic_login')]
         private readonly LoggerInterface $magicLoginLogger,
     ) {
@@ -35,6 +38,20 @@ class MagicLoginPageService
         }
 
         $magicToken->setUsedAt(new DateTimeImmutable());
+
+        $telegramChatId = $magicToken->getTelegramChatId();
+        if ($telegramChatId !== null) {
+            $user = $magicToken->getUser();
+            $identity = $this->telegramIdentityRepository->findOneBy(['user' => $user]);
+
+            if (!$identity instanceof TelegramIdentity) {
+                $identity = new TelegramIdentity($user);
+                $this->entityManager->persist($identity);
+            }
+
+            $identity->setTelegramChatId((string) $telegramChatId);
+        }
+
         $this->entityManager->flush();
 
         $jwt = $this->jwtTokenManager->create($magicToken->getUser());
