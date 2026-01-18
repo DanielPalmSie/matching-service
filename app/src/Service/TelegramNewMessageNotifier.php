@@ -19,6 +19,7 @@ class TelegramNewMessageNotifier
         private readonly LoggerInterface $logger,
         private readonly string $botInternalUrl,
         private readonly float $timeoutSeconds,
+        private readonly string $internalApiToken,
     ) {
     }
 
@@ -31,6 +32,9 @@ class TelegramNewMessageNotifier
             $response = $this->httpClient->request('POST', $url, [
                 'json' => $payload,
                 'timeout' => $this->timeoutSeconds,
+                'headers' => [
+                    'X-Internal-Token' => $this->internalApiToken,
+                ],
             ]);
 
             $statusCode = $response->getStatusCode();
