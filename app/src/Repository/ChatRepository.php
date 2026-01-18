@@ -48,6 +48,17 @@ class ChatRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function findChatByPairKeyWithoutOrigin(string $pairKey): ?Chat
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.pairKey = :pairKey')
+            ->andWhere('c.originType IS NULL')
+            ->andWhere('c.originId IS NULL')
+            ->setParameter('pairKey', $pairKey)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     /**
      * @return array<int, array{chat: Chat, originRequest: ?Request}>
      */

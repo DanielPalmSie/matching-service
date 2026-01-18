@@ -50,6 +50,16 @@ class ChatService
                 }
                 return $existing;
             }
+
+            $existing = $this->chatRepository->findChatByPairKeyWithoutOrigin($pairKey);
+            if ($existing !== null) {
+                $existing->setOriginType($originType);
+                $existing->setOriginId($originId);
+                $this->applyContext($existing, $normalizedContextTitle, $normalizedContextSubtitle, $normalizedContextSource);
+                $this->entityManager->flush();
+
+                return $existing;
+            }
         } else {
             $existing = $this->chatRepository->findExistingChatBetweenUsers($userA, $userB);
             if ($existing !== null) {
