@@ -11,6 +11,8 @@ parameters:
     app.openai.embedding_model: '%env(OPENAI_EMBEDDING_MODEL)%'
     app.frontend_base_url: '%env(resolve:FRONTEND_BASE_URL)%'
     app.mailer_from: '%env(resolve:MAILER_FROM)%'
+    app.telegram_bot_internal_url: '%env(resolve:BOT_INTERNAL_URL)%'
+    app.telegram_bot_notify_timeout: '%env(float:BOT_NOTIFY_TIMEOUT)%'
 
 services:
     # default configuration for services in *this* file
@@ -44,6 +46,11 @@ services:
 
     App\Service\Matching\MatchingEngineInterface:
         class: App\Service\Matching\EmbeddingMatchingEngine
+
+    App\Service\TelegramNewMessageNotifier:
+        arguments:
+            $botInternalUrl: '%env(resolve:BOT_INTERNAL_URL)%'
+            $timeoutSeconds: '%env(float:BOT_NOTIFY_TIMEOUT)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
