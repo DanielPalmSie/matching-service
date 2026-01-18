@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Service\Auth;
 
 use App\Entity\MagicLoginToken;
+use App\Entity\TelegramIdentity;
+use App\Repository\TelegramIdentityRepository;
 use App\Service\Exception\ValidationException;
 use App\Service\Http\JsonPayloadDecoder;
 use App\Service\TelegramLoginNotifier;
@@ -21,6 +23,7 @@ class MagicLoginConsumeService
         private readonly EntityManagerInterface $entityManager,
         private readonly JWTTokenManagerInterface $jwtTokenManager,
         private readonly TelegramLoginNotifier $telegramLoginNotifier,
+        private readonly TelegramIdentityRepository $telegramIdentityRepository,
         private readonly LoggerInterface $logger,
         private readonly JsonPayloadDecoder $payloadDecoder,
     ) {
@@ -62,6 +65,7 @@ class MagicLoginConsumeService
         ]);
 
         $magicToken->setUsedAt(new DateTimeImmutable());
+        $this->syncTelegramIdentity($magicToken);
         $this->entityManager->flush();
 
         $jwt = $this->jwtTokenManager->create($magicToken->getUser());
@@ -86,13 +90,31 @@ class MagicLoginConsumeService
                     'chat_id' => $magicToken->getTelegramChatId(),
                 ]);
             }
-        } else {
+        }
+
+        return $jwt;
+    }
+
+    private function syncTelegramIdentity(MagicLoginToken $magicToken): void
+    {
+        $telegramChatId = $magicToken->getTelegramChatId();
+        if ($telegramChatId === null) {
             $this->logger->warning('Magic login token used without a telegram chat id', [
                 'magic_login_token_id' => $magicToken->getId(),
                 'user_id' => $magicToken->getUser()->getId(),
             ]);
+
+            return;
         }
 
-        return $jwt;
+        $user = $magicToken->getUser();
+        $identity = $this->telegramIdentityRepository->findOneBy(['user' => $user]);
+
+        if (!$identity instanceof TelegramIdentity) {
+            $identity = new TelegramIdentity($user);
+            $this->entityManager->persist($identity);
+        }
+
+        $identity->setTelegramChatId((string) $telegramChatId);
     }
 }

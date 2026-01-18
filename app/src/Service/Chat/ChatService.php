@@ -8,10 +8,14 @@ use App\Entity\Chat;
 use App\Entity\Message;
 use App\Entity\User;
 use App\Repository\ChatRepository;
+use App\Repository\TelegramIdentityRepository;
 use App\Service\Exception\ValidationException;
+use App\Service\TelegramNewMessageNotifier;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
+use Throwable;
 
 class ChatService
 {
@@ -20,6 +24,9 @@ class ChatService
         private readonly ChatRepository $chatRepository,
         private readonly HubInterface $hub,
         private readonly ChatDtoFactory $chatDtoFactory,
+        private readonly TelegramIdentityRepository $telegramIdentityRepository,
+        private readonly TelegramNewMessageNotifier $telegramNewMessageNotifier,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -101,6 +108,7 @@ class ChatService
         $this->entityManager->flush();
 
         $this->publishMessage($message);
+        $this->notifyTelegramNewMessage($message);
 
         return $message;
     }
@@ -146,6 +154,53 @@ class ChatService
         );
 
         $this->hub->publish($update);
+    }
+
+    private function notifyTelegramNewMessage(Message $message): void
+    {
+        $chat = $message->getChat();
+        $sender = $message->getSender();
+        $senderId = $sender->getId();
+        $recipient = null;
+
+        foreach ($chat->getParticipants() as $participant) {
+            if ($participant->getId() !== $senderId) {
+                $recipient = $participant;
+                break;
+            }
+        }
+
+        if (!$recipient instanceof User) {
+            $this->logger->warning('Telegram notification skipped: recipient not found', [
+                'chatId' => $chat->getId(),
+                'messageId' => $message->getId(),
+                'senderUserId' => $senderId,
+            ]);
+
+            return;
+        }
+
+        $telegramChatId = $this->telegramIdentityRepository->findTelegramChatIdByUser($recipient);
+        if ($telegramChatId === null) {
+            $this->logger->warning('Telegram notification skipped: missing telegram chat id', [
+                'chatId' => $chat->getId(),
+                'messageId' => $message->getId(),
+                'recipientUserId' => $recipient->getId(),
+            ]);
+
+            return;
+        }
+
+        try {
+            $this->telegramNewMessageNotifier->notifyNewMessage($message, $recipient, $telegramChatId);
+        } catch (Throwable $exception) {
+            $this->logger->error('Telegram notification failed unexpectedly', [
+                'exception' => $exception,
+                'chatId' => $chat->getId(),
+                'messageId' => $message->getId(),
+                'recipientUserId' => $recipient->getId(),
+            ]);
+        }
     }
 
     private function assertParticipant(Chat $chat, User $user): void
